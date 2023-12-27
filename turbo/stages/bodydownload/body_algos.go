@@ -89,6 +89,7 @@ func (bd *BodyDownload) RequestMoreBodies(tx kv.RwTx, blockReader services.FullB
 				continue
 			}
 			bd.peerMap[req.peerID]++
+			log.Debug("BlockBodyExpired", "blockNum", blockNum)
 			dataflow.BlockBodyDownloadStates.AddChange(blockNum, dataflow.BlockBodyExpired)
 			delete(bd.requests, blockNum)
 		}
@@ -149,6 +150,7 @@ func (bd *BodyDownload) RequestMoreBodies(tx kv.RwTx, blockReader services.FullB
 					body.Withdrawals = make([]*types.Withdrawal, 0)
 				}
 				bd.addBodyToCache(blockNum, body)
+				log.Debug("BlockBodyEmpty", "blockNum", blockNum)
 				dataflow.BlockBodyDownloadStates.AddChange(blockNum, dataflow.BlockBodyEmpty)
 				request = false
 			} else {
@@ -156,6 +158,7 @@ func (bd *BodyDownload) RequestMoreBodies(tx kv.RwTx, blockReader services.FullB
 				block := rawdb.ReadBlock(tx, hash, blockNum)
 				if block != nil {
 					bd.addBodyToCache(blockNum, block.RawBody())
+					log.Debug("BlockBodyInDb", "blockNum", blockNum)
 					dataflow.BlockBodyDownloadStates.AddChange(blockNum, dataflow.BlockBodyInDb)
 					request = false
 				}
@@ -196,6 +199,7 @@ func (bd *BodyDownload) checkPrefetchedBlock(hash libcommon.Hash, tx kv.RwTx, bl
 	bd.deliveriesH[blockNum] = header
 
 	// make sure we have the body in the bucket for later use
+	log.Debug("BlockBodyPrefetched", "blockNum", blockNum)
 	dataflow.BlockBodyDownloadStates.AddChange(blockNum, dataflow.BlockBodyPrefetched)
 	bd.addBodyToCache(blockNum, body)
 
@@ -215,9 +219,9 @@ func (bd *BodyDownload) checkPrefetchedBlock(hash libcommon.Hash, tx kv.RwTx, bl
 }
 
 func (bd *BodyDownload) RequestSent(bodyReq *BodyRequest, timeWithTimeout uint64, peer [64]byte) {
-	//if len(bodyReq.BlockNums) > 0 {
-	//	log.Debug("Sent Body request", "peer", fmt.Sprintf("%x", peer)[:8], "nums", fmt.Sprintf("%d", bodyReq.BlockNums))
-	//}
+	if len(bodyReq.BlockNums) > 0 {
+		log.Debug("Sent Body request", "peer", fmt.Sprintf("%x", peer)[:8], "nums", fmt.Sprintf("%d", bodyReq.BlockNums))
+	}
 	for _, num := range bodyReq.BlockNums {
 		bd.requests[num] = bodyReq
 		dataflow.BlockBodyDownloadStates.AddChange(num, dataflow.BlockBodyRequested)
@@ -323,6 +327,7 @@ Loop:
 			bd.addBodyToCache(blockNum, &types.RawBody{Transactions: txs[i], Uncles: uncles[i], Withdrawals: withdrawals[i]})
 			bd.delivered.Add(blockNum)
 			delivered++
+			log.Debug("BlockBodyReceived", "blockNum", blockNum)
 			dataflow.BlockBodyDownloadStates.AddChange(blockNum, dataflow.BlockBodyReceived)
 		}
 		// Clean up the requests
@@ -331,6 +336,7 @@ Loop:
 			delete(bd.requests, blockNum)
 			if !bd.delivered.Contains(blockNum) {
 				// Delivery was requested but was skipped due to the limitation on the size of the response
+				log.Debug("BlockBodySkipped", "blockNum", blockNum)
 				dataflow.BlockBodyDownloadStates.AddChange(blockNum, dataflow.BlockBodySkipped)
 			}
 			//clearedNums = append(clearedNums, blockNum)
@@ -428,6 +434,7 @@ func (bd *BodyDownload) addBodyToCache(key uint64, body *types.RawBody) {
 		item, _ := bd.bodyCache.DeleteMax()
 		bd.bodyCacheSize -= item.payloadSize
 		delete(bd.requests, item.blockNum)
+		log.Debug("BlockBodyEvicted", "item.blockNum", item.blockNum)
 		dataflow.BlockBodyDownloadStates.AddChange(item.blockNum, dataflow.BlockBodyEvicted)
 	}
 }

@@ -392,11 +392,13 @@ func (hd *HeaderDownload) RequestMoreHeaders(currentTime time.Time) (*HeaderRequ
 	var req *HeaderRequest
 	hd.anchorTree.Ascend(func(anchor *Anchor) bool {
 		if anchor.nextRetryTime.After(currentTime) {
+			log.Debug("Not ready to retry this anchor yet", "anchor.BlockHeight", anchor.blockHeight)
 			return true
 		}
 		if anchor.timeouts >= 10 {
 			// Ancestors of this anchor seem to be unavailable, invalidate and move on
 			hd.invalidateAnchor(anchor, "suspected unavailability")
+			log.Debug("Invalidate header", "anchor.BlockHeight", anchor.blockHeight)
 			penalties = append(penalties, PenaltyItem{Penalty: AbandonedAnchorPenalty, PeerID: anchor.peerID})
 			return true
 		}
@@ -408,6 +410,7 @@ func (hd *HeaderDownload) RequestMoreHeaders(currentTime time.Time) (*HeaderRequ
 			Skip:    0,
 			Reverse: true,
 		}
+		log.Debug("Add headerRequest", "req.Number", req.Number, "req.Anchor.peerID", req.Anchor.peerID, "anchor.parentHash", anchor.parentHash)
 		return false
 	})
 	return req, penalties
@@ -459,6 +462,7 @@ func (hd *HeaderDownload) UpdateStats(req *HeaderRequest, skeleton bool, peer [6
 	} else {
 		hd.stats.Requests++
 		// We know that req is reverse request, with Skip == 0, therefore comparing Number with reqMax
+		log.Debug("Send request", "req.Number", req.Number, "req.Hash", req.Hash, "req.Length", req.Length, "req.Skip", req.Skip)
 		if req.Number > hd.stats.ReqMaxBlock {
 			hd.stats.ReqMaxBlock = req.Number
 		}
@@ -590,11 +594,13 @@ func (hd *HeaderDownload) InsertHeader(hf FeedHeaderFunc, terminalTotalDifficult
 			}
 		}
 		if link.blockHeight == hd.latestMinedBlockNumber {
+			log.Debug("Header Inserted", "link.blockHeight", link.blockHeight)
 			return false, true, 0, lastTime, nil
 		}
 	}
 	for hd.persistedLinkQueue.Len() > hd.persistedLinkLimit {
 		link := heap.Pop(&hd.persistedLinkQueue).(*Link)
+		log.Debug("HeaderEvicted", "link.blockHeight", link.blockHeight)
 		delete(hd.links, link.hash)
 		for child := link.fChild; child != nil; child, child.next = child.next, nil {
 		}
@@ -1005,6 +1011,7 @@ func (hi *HeaderInserter) BestHeaderChanged() bool {
 func (hd *HeaderDownload) ProcessHeader(sh ChainSegmentHeader, newBlock bool, peerID [64]byte) bool {
 	hd.lock.Lock()
 	defer hd.lock.Unlock()
+	log.Debug("Process header", "Number", sh.Number, "Hash", sh.Hash, "peer", fmt.Sprintf("%x", peerID)[:8])
 	if sh.Number > hd.stats.RespMaxBlock {
 		hd.stats.RespMaxBlock = sh.Number
 	}
@@ -1063,7 +1070,8 @@ func (hd *HeaderDownload) ProcessHeader(sh ChainSegmentHeader, newBlock bool, pe
 		}
 		anchor.fLink = link
 		hd.anchors[anchor.parentHash] = anchor
-		hd.anchorTree.ReplaceOrInsert(anchor)
+		_, success := hd.anchorTree.ReplaceOrInsert(anchor)
+		log.Debug("AnchorTree add anchor", "anchor.blockHeight", anchor.blockHeight, "success", success)
 		return true
 	}
 	return false

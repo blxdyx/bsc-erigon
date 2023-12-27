@@ -217,6 +217,7 @@ func BodiesForward(
 				}
 			}
 			if ok {
+				log.Debug("BlockBodyCleared", "blockHeight", blockHeight)
 				dataflow.BlockBodyDownloadStates.AddChange(blockHeight, dataflow.BlockBodyCleared)
 			}
 
