@@ -865,6 +865,7 @@ Loop:
 
 			stageProgress = blockNum
 			inputTxNum++
+			progress.Log(rs, in, rws, count, totalGas, inputBlockNum.Load(), outputBlockNum.GetValueUint64(), outputTxNum.Load(), execRepeats.GetValueUint64(), 0, shouldGenerateChangesets)
 		}
 		if shouldGenerateChangesets {
 			aggTx := applyTx.(state2.HasAggTx).AggTx().(*state2.AggregatorRoTx)
