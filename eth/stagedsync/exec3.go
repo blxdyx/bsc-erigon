@@ -109,7 +109,7 @@ func (p *Progress) Log(rs *state.StateV3, in *state.QueueWithRetry, rws *state.R
 	p.logger.Info(fmt.Sprintf("[%s]"+suffix, p.logPrefix),
 		//"workers", workerCount,
 		"blk", outputBlockNum,
-		"txNum", outTxNum,
+		"time", float64(interval)/float64(time.Second),
 		"tx/s", fmt.Sprintf("%.1f", speedTx),
 		"Mgas/s", fmt.Sprintf("%.1f", speedMgas),
 		//"pipe", fmt.Sprintf("(%d+%d)->%d/%d->%d/%d", in.NewTasksLen(), in.RetriesLen(), rws.ResultChLen(), rws.ResultChCap(), rws.Len(), rws.Limit()),
@@ -866,7 +866,7 @@ Loop:
 
 			stageProgress = blockNum
 			inputTxNum++
-			progress.Log(rs, in, rws, count, totalGas, inputBlockNum.Load(), outputBlockNum.GetValueUint64(), outputTxNum.Load(), execRepeats.GetValueUint64(), 0, shouldGenerateChangesets)
+			//progress.Log(rs, in, rws, count, totalGas, inputBlockNum.Load(), outputBlockNum.GetValueUint64(), outputTxNum.Load(), execRepeats.GetValueUint64(), 0, shouldGenerateChangesets)
 		}
 		if shouldGenerateChangesets {
 			aggTx := applyTx.(state2.HasAggTx).AggTx().(*state2.AggregatorRoTx)
