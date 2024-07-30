@@ -109,6 +109,7 @@ func (p *Progress) Log(rs *state.StateV3, in *state.QueueWithRetry, rws *state.R
 	p.logger.Info(fmt.Sprintf("[%s]"+suffix, p.logPrefix),
 		//"workers", workerCount,
 		"blk", outputBlockNum,
+		"txNum", outTxNum,
 		"tx/s", fmt.Sprintf("%.1f", speedTx),
 		"Mgas/s", fmt.Sprintf("%.1f", speedMgas),
 		//"pipe", fmt.Sprintf("(%d+%d)->%d/%d->%d/%d", in.NewTasksLen(), in.RetriesLen(), rws.ResultChLen(), rws.ResultChCap(), rws.Len(), rws.Limit()),
