@@ -151,7 +151,7 @@ require (
 
 replace (
 	github.com/anacrolix/torrent => github.com/erigontech/torrent v1.54.2-alpha-33
-	github.com/erigontech/erigon-snapshot => github.com/node-real/bsc-erigon-snapshot v1.0.1-0.20240817164311-7e5136289541
+	github.com/erigontech/erigon-snapshot => github.com/blxdyx/bsc-erigon-snapshot v0.0.0-20240819064437-1c3e5dfd4750
 	github.com/holiman/bloomfilter/v2 => github.com/AskAlexSharov/bloomfilter/v2 v2.0.8
 	github.com/tidwall/btree => github.com/AskAlexSharov/btree v1.6.2
 )
