@@ -1124,10 +1124,9 @@ func doBodiesDecrement(cliCtx *cli.Context) error {
 		if f.Type.Enum() != coresnaptype.Enums.Bodies {
 			continue
 		}
-		if f.From != 17500000 {
-			continue
+		if f.From == 18000000 || f.From == 19000000 {
+			l = append(l, f)
 		}
-		l = append(l, f)
 	}
 	migrateSingleBody := func(srcF, dstF string) error {
 		src, err := seg.NewDecompressor(srcF)
