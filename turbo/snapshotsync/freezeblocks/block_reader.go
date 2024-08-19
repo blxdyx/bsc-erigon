@@ -1134,8 +1134,8 @@ func (r *BlockReader) IntegrityTxnID(failFast bool) error {
 		if err != nil {
 			return err
 		}
-		if b.BaseTxnID.U64() != expectedFirstTxnID {
-			err := fmt.Errorf("[integrity] IntegrityTxnID: bn=%d, baseID=%d, cnt=%d, expectedFirstTxnID=%d", firstBlockNum, b.BaseTxnID, sn.Count(), expectedFirstTxnID)
+		if b.BaseTxnID.U64() != expectedFirstTxnID || uint32(sn.Count())+2 != b.TxCount {
+			err := fmt.Errorf("[integrity] IntegrityTxnID: bn=%d, baseID=%d, cnt=%d, b.TxCount %d, expectedFirstTxnID=%d", firstBlockNum, b.BaseTxnID, sn.Count(), b.TxCount, expectedFirstTxnID)
 			if failFast {
 				return err
 			} else {
