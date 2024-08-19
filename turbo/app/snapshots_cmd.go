@@ -1124,7 +1124,7 @@ func doBodiesDecrement(cliCtx *cli.Context) error {
 		if f.Type.Enum() != coresnaptype.Enums.Bodies {
 			continue
 		}
-		if f.From == 18500000 {
+		if f.From == 18500000 || f.From == 19000000 {
 			l = append(l, f)
 		}
 	}
@@ -1182,7 +1182,9 @@ func doBodiesDecrement(cliCtx *cli.Context) error {
 		os.Remove(srcF + ".idx")
 		ext := filepath.Ext(srcF)
 		withoutExt := srcF[:len(srcF)-len(ext)]
+		withoutBody := withoutExt[:len(withoutExt)-6]
 		_ = os.Remove(withoutExt + ".idx")
+		_ = os.Remove(withoutBody + "transactions-to-block.idx")
 		log.Info("done", "file", src.FileName())
 		return nil
 	}
