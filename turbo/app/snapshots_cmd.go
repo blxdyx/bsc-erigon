@@ -1124,7 +1124,7 @@ func doBodiesDecrement(cliCtx *cli.Context) error {
 		if f.Type.Enum() != coresnaptype.Enums.Bodies {
 			continue
 		}
-		if f.From < 16_500_000 {
+		if f.From < 16_500_000 || f.From > 19000000 {
 			continue
 		}
 		l = append(l, f)
