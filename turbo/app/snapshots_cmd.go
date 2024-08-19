@@ -1124,9 +1124,10 @@ func doBodiesDecrement(cliCtx *cli.Context) error {
 		if f.Type.Enum() != coresnaptype.Enums.Bodies {
 			continue
 		}
-		if f.From == 18500000 || f.From == 19000000 {
-			l = append(l, f)
+		if f.From < 19500000 {
+			continue
 		}
+		l = append(l, f)
 	}
 	migrateSingleBody := func(srcF, dstF string) error {
 		src, err := seg.NewDecompressor(srcF)
@@ -1155,7 +1156,7 @@ func doBodiesDecrement(cliCtx *cli.Context) error {
 			if err := rlp.Decode(bytes.NewReader(buf), body); err != nil {
 				return err
 			}
-			body.BaseTxnID -= 1
+			body.BaseTxnID -= 2
 			dstBuf.Reset()
 			if err := rlp.Encode(dstBuf, body); err != nil {
 				return err
