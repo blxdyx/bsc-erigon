@@ -1124,7 +1124,7 @@ func doBodiesDecrement(cliCtx *cli.Context) error {
 		if f.Type.Enum() != coresnaptype.Enums.Bodies {
 			continue
 		}
-		if f.From < 19500000 {
+		if f.From != 16500000 {
 			continue
 		}
 		l = append(l, f)
@@ -1156,7 +1156,7 @@ func doBodiesDecrement(cliCtx *cli.Context) error {
 			if err := rlp.Decode(bytes.NewReader(buf), body); err != nil {
 				return err
 			}
-			body.BaseTxnID -= 2
+			body.BaseTxnID += 1
 			dstBuf.Reset()
 			if err := rlp.Encode(dstBuf, body); err != nil {
 				return err

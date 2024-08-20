@@ -387,7 +387,7 @@ func FillDBFromSnapshots(logPrefix string, ctx context.Context, tx kv.RwTx, dirs
 				if err := h2n.Collect(blockHash[:], blockNumBytes); err != nil {
 					return err
 				}
-				if engine != nil && engine.Type() == chain.ParliaConsensus && blockNum < 30_000_000 {
+				if engine != nil && engine.Type() == chain.ParliaConsensus {
 					// consensus may have own database, let's fill it
 					// different consensuses may have some conditions for validators snapshots
 					if (blockNum-1)%parlia.CheckpointInterval == 0 {
