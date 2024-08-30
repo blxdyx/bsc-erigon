@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	testnetURL = ""
+	testnetURL = "https://bsc-testnet.nodereal.io/v1/2e9d633513f945d89ec95755ae183afd"
 	mainNetURL = ""
 )
 
@@ -52,7 +52,7 @@ func GetBlobSidecars(blockNumber uint64) types.BlobSidecars {
 		return nil
 	}
 
-	resp, err := http.Post(mainNetURL, "application/json", bytes.NewBuffer(body))
+	resp, err := http.Post(testnetURL, "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		fmt.Println("Error making request:", err)
 		return nil
