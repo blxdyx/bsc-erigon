@@ -56,6 +56,7 @@ func (br *BlockRetire) retireBscBlocks(ctx context.Context, minBlockNum uint64, 
 		minimumBlob = chapelMinSegFrom
 	}
 	blockFrom := max(blockReader.FrozenBscBlobs(), minimumBlob)
+	logger.Log(lvl, "FrozenBscBlobs", blockReader.FrozenBscBlobs())
 	blocksRetired := false
 	for _, snap := range blockReader.BscSnapshots().Types() {
 		if maxBlockNum <= blockFrom || maxBlockNum-blockFrom < snaptype.Erigon2MergeLimit {
