@@ -145,7 +145,10 @@ func (s *BscRoSnapshots) ReopenFolder() error {
 		_, fName := filepath.Split(f.Path)
 		list = append(list, fName)
 	}
-	return s.ReopenList(list, false)
+	if err := s.ReopenList(list, false); err != nil {
+		return err
+	}
+	return nil
 }
 
 type BscView struct {
