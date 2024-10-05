@@ -510,6 +510,7 @@ func CustomTraceMapReduce(fromBlock, toBlock uint64, consumer TraceConsumer, ctx
 
 		blockReceipts := make(types.Receipts, len(txs))
 		rules := chainConfig.Rules(blockNum, b.Time())
+		var systemTxIndex int
 		for txIndex := -1; txIndex <= len(txs); txIndex++ {
 			// Do not oversend, wait for the result heap to go under certain size
 			txTask := &state.TxTask{
@@ -549,6 +550,15 @@ func CustomTraceMapReduce(fromBlock, toBlock uint64, consumer TraceConsumer, ctx
 					}
 					txTask.Sender = &sender
 					logger.Warn("[Execution] expensive lazy sender recovery", "blockNum", txTask.BlockNum, "txIdx", txTask.TxIndex)
+				}
+			}
+			posa, isPoSa := cfg.Engine.(consensus.PoSA)
+			if txIndex >= 0 && !txTask.Final && isPoSa {
+				if isSystemTx, err := posa.IsSystemTransaction(txs[txIndex], header); err != nil {
+					return err
+				} else if isSystemTx {
+					systemTxIndex++
+					txTask.SystemTxIndex = systemTxIndex
 				}
 			}
 			if workersExited.Load() {
