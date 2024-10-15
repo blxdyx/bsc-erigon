@@ -1425,6 +1425,9 @@ func (p *Parlia) distributeToValidator(val libcommon.Address, ibs *state.IntraBl
 
 	if *curIndex == *txIndex {
 		balance := ibs.GetBalance(consensus.SystemAddress).Clone()
+		if _, ok := ibs.StateReader.(*state.HistoryReaderV3); ok {
+			balance = (*txs)[*curIndex].GetValue()
+		}
 
 		if balance.Cmp(u256.Num0) <= 0 {
 			return false, nil
