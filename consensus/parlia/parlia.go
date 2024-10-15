@@ -884,7 +884,6 @@ func (p *Parlia) verifyTurnLength(chain consensus.ChainHeaderReader, header *typ
 // Initialize runs any pre-transaction state modifications (e.g. epoch start)
 func (p *Parlia) Initialize(config *chain.Config, chain consensus.ChainHeaderReader, header *types.Header,
 	state *state.IntraBlockState, syscall consensus.SysCallCustom, logger log.Logger, tracer *tracing.Hooks) error {
-	return nil
 	var err error
 	parentHeader := chain.GetHeader(header.ParentHash, header.Number.Uint64()-1)
 	if err = p.verifyValidators(header, parentHeader, state); err != nil {
