@@ -394,7 +394,7 @@ func (p *Parlia) getParent(chain consensus.ChainHeaderReader, header *types.Head
 	if len(parents) > 0 {
 		parent = parents[len(parents)-1]
 	} else {
-		parent = chain.GetHeader(header.ParentHash, number-1)
+		parent = chain.GetHeaderByHash(header.ParentHash)
 	}
 
 	if parent == nil || parent.Number.Uint64() != number-1 || parent.Hash() != header.ParentHash {
@@ -737,7 +737,7 @@ func (p *Parlia) snapshot(chain consensus.ChainHeaderReader, number uint64, hash
 		// If we're at the genesis, snapshot the initial state.
 		if number == 0 {
 			// Headers included into the snapshots have to be trusted as checkpoints
-			checkpoint := chain.GetHeader(hash, number)
+			checkpoint := chain.GetHeaderByHash(hash)
 			if checkpoint != nil {
 				// get validators from headers
 				validators, voteAddrs, err := parseValidators(checkpoint, p.chainConfig, p.config)
@@ -764,7 +764,7 @@ func (p *Parlia) snapshot(chain consensus.ChainHeaderReader, number uint64, hash
 			}
 			parents = parents[:len(parents)-1]
 		} else {
-			header = chain.GetHeader(hash, number)
+			header = chain.GetHeaderByHash(hash)
 			if header == nil {
 				return nil, consensus.ErrUnknownAncestor
 			}
@@ -885,7 +885,7 @@ func (p *Parlia) verifyTurnLength(chain consensus.ChainHeaderReader, header *typ
 func (p *Parlia) Initialize(config *chain.Config, chain consensus.ChainHeaderReader, header *types.Header,
 	state *state.IntraBlockState, syscall consensus.SysCallCustom, logger log.Logger, tracer *tracing.Hooks) error {
 	var err error
-	parentHeader := chain.GetHeader(header.ParentHash, header.Number.Uint64()-1)
+	parentHeader := chain.GetHeaderByHash(header.ParentHash)
 	if err = p.verifyValidators(header, parentHeader, state); err != nil {
 		return err
 	}
@@ -958,7 +958,7 @@ func (p *Parlia) finalize(header *types.Header, ibs *state.IntraBlockState, txs 
 	}
 	// If the block is an epoch end block, verify the validator list
 	// The verification can only be done when the state is ready, it can't be done in VerifyHeader.
-	parentHeader := chain.GetHeader(header.ParentHash, number-1)
+	parentHeader := chain.GetHeaderByHash(header.ParentHash)
 
 	var finish bool
 	defer func() {
@@ -1568,7 +1568,7 @@ func (p *Parlia) GetFinalizedHeader(chain consensus.ChainHeaderReader, header *t
 	}
 
 	if snap.Attestation != nil {
-		return chain.GetHeader(snap.Attestation.SourceHash, snap.Attestation.SourceNumber)
+		return chain.GetHeaderByHash(snap.Attestation.SourceHash)
 	}
 	return nil
 }
