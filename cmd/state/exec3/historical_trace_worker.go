@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/erigontech/erigon/core/systemcontracts"
+	"github.com/erigontech/erigon/params"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -443,6 +444,10 @@ func CustomTraceMapReduce(fromBlock, toBlock uint64, consumer TraceConsumer, ctx
 	log.Info("[Receipt] batch start", "fromBlock", fromBlock, "toBlock", toBlock, "workers", cfg.Workers)
 	br := cfg.BlockReader
 	chainConfig := cfg.ChainConfig
+	// Apply special hacks for BSC params
+	if chainConfig.Parlia != nil {
+		params.ApplyBinanceSmartChainParams()
+	}
 	getHeaderFunc := func(hash common.Hash, number uint64) (h *types.Header) {
 		if tx != nil {
 			h, _ = cfg.BlockReader.Header(ctx, tx, hash, number)
