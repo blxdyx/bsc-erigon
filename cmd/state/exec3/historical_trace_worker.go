@@ -286,7 +286,9 @@ func (rw *HistoricalTraceWorker) RunTxTask(txTask *state.TxTask) {
 		} else {
 			txTask.Failed = applyRes.Failed()
 			txTask.UsedGas = applyRes.UsedGas
-			log.Info("Exec one tx", "txTask.TxIndex", txTask.TxIndex, " txTask.Failed", txTask.Failed, "txTask.BlockNum", txTask.BlockNum)
+			if txTask.BlockNum%1_000_000 == 0 {
+				log.Info("Exec one tx", "txTask.TxIndex", txTask.TxIndex, " txTask.Failed", txTask.Failed, "txTask.BlockNum", txTask.BlockNum)
+			}
 			// Update the state with pending changes
 			ibs.SoftFinalise()
 			txTask.Logs = ibs.GetRawLogs(txTask.TxIndex)
