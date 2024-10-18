@@ -145,6 +145,12 @@ func (rw *HistoricalTraceWorker) RunTxTask(txTask *state.TxTask) {
 	ibs := rw.ibs
 	//ibs.SetTrace(true)
 
+	defer func() {
+		if txTask.TxNum%1_000_000 == 0 {
+			log.Info("Run task", "txTask.BlockNum", txTask.BlockNum, "txTask.TxNum", txTask.TxNum, "txTask.TxIndex", txTask.TxIndex, " txTask.Failed", txTask.Failed)
+		}
+	}()
+
 	rules := txTask.Rules
 	var err error
 	header := txTask.Header
@@ -200,60 +206,60 @@ func (rw *HistoricalTraceWorker) RunTxTask(txTask *state.TxTask) {
 		if err != nil {
 			txTask.Error = err
 		}
-	//case txTask.SystemTxIndex > 0:
-	//	syscall := func(contract common.Address, data []byte) ([]byte, error) {
-	//		return core.SysCallContract(contract, data, rw.execArgs.ChainConfig, ibs, header, rw.execArgs.Engine, false /* constCall */)
-	//	}
-	//
-	//	systemCall := func(ibs *state.IntraBlockState) ([]byte, bool, error) {
-	//
-	//		rw.taskGasPool.Reset(txTask.Tx.GetGas(), txTask.Tx.GetBlobGas())
-	//		if tracer := rw.consumer.NewTracer(); tracer != nil {
-	//			rw.vmConfig.Debug = true
-	//			rw.vmConfig.Tracer = tracer
-	//		}
-	//		rw.vmConfig.SkipAnalysis = txTask.SkipAnalysis
-	//		msg := txTask.TxAsMessage
-	//		ibs.SetTxContext(txTask.TxIndex, txTask.BlockNum)
-	//		msg.SetCheckNonce(!rw.vmConfig.StatelessExec)
-	//		if rw.execArgs.ChainConfig.IsCancun(header.Number.Uint64(), header.Time) {
-	//			rules := rw.execArgs.ChainConfig.Rules(header.Number.Uint64(), header.Time)
-	//			ibs.Prepare(rules, msg.From(), txTask.EvmBlockContext.Coinbase, msg.To(), vm.ActivePrecompiles(rules), msg.AccessList(), nil)
-	//		}
-	//
-	//		txContext := core.NewEVMTxContext(msg)
-	//		if rw.vmConfig.TraceJumpDest {
-	//			txContext.TxHash = txTask.Tx.Hash()
-	//		}
-	//		rw.evm.ResetBetweenBlocks(txTask.EvmBlockContext, txContext, ibs, *rw.vmConfig, rules)
-	//		// Increment the nonce for the next transaction
-	//		ibs.SetNonce(msg.From(), ibs.GetNonce(msg.From())+1)
-	//		ret, leftOverGas, err := rw.evm.Call(
-	//			vm.AccountRef(msg.From()),
-	//			*msg.To(),
-	//			msg.Data(),
-	//			msg.Gas(),
-	//			msg.Value(),
-	//			false,
-	//		)
-	//		if err != nil {
-	//			txTask.Error = err
-	//		} else {
-	//			txTask.Failed = false
-	//			txTask.UsedGas = msg.Gas() - leftOverGas
-	//			// Update the state with pending changes
-	//			ibs.SoftFinalise()
-	//			//txTask.Error = ibs.FinalizeTx(rules, noop)
-	//			txTask.Logs = ibs.GetRawLogs(txTask.TxIndex)
-	//		}
-	//		return ret, true, nil
-	//	}
-	//
-	//	_, _, _, err := rw.execArgs.Engine.Finalize(rw.execArgs.ChainConfig, types.CopyHeader(header), ibs, txTask.Txs, txTask.Uncles, txTask.BlockReceipts, txTask.Withdrawals, txTask.Requests, rw.chain, syscall, systemCall, txTask.TxIndex, rw.chainTx, rw.logger)
-	//	if err != nil {
-	//		log.Error("run system tx err", "block Number", txTask.BlockNum, "txIndex", txTask.TxIndex, "err", err)
-	//		txTask.Error = err
-	//	}
+	case txTask.SystemTxIndex > 0:
+		syscall := func(contract common.Address, data []byte) ([]byte, error) {
+			return core.SysCallContract(contract, data, rw.execArgs.ChainConfig, ibs, header, rw.execArgs.Engine, false /* constCall */)
+		}
+
+		systemCall := func(ibs *state.IntraBlockState) ([]byte, bool, error) {
+
+			rw.taskGasPool.Reset(txTask.Tx.GetGas(), txTask.Tx.GetBlobGas())
+			if tracer := rw.consumer.NewTracer(); tracer != nil {
+				rw.vmConfig.Debug = true
+				rw.vmConfig.Tracer = tracer
+			}
+			rw.vmConfig.SkipAnalysis = txTask.SkipAnalysis
+			msg := txTask.TxAsMessage
+			ibs.SetTxContext(txTask.TxIndex, txTask.BlockNum)
+			msg.SetCheckNonce(!rw.vmConfig.StatelessExec)
+			if rw.execArgs.ChainConfig.IsCancun(header.Number.Uint64(), header.Time) {
+				rules := rw.execArgs.ChainConfig.Rules(header.Number.Uint64(), header.Time)
+				ibs.Prepare(rules, msg.From(), txTask.EvmBlockContext.Coinbase, msg.To(), vm.ActivePrecompiles(rules), msg.AccessList(), nil)
+			}
+
+			txContext := core.NewEVMTxContext(msg)
+			if rw.vmConfig.TraceJumpDest {
+				txContext.TxHash = txTask.Tx.Hash()
+			}
+			rw.evm.ResetBetweenBlocks(txTask.EvmBlockContext, txContext, ibs, *rw.vmConfig, rules)
+			// Increment the nonce for the next transaction
+			ibs.SetNonce(msg.From(), ibs.GetNonce(msg.From())+1)
+			ret, leftOverGas, err := rw.evm.Call(
+				vm.AccountRef(msg.From()),
+				*msg.To(),
+				msg.Data(),
+				msg.Gas(),
+				msg.Value(),
+				false,
+			)
+			if err != nil {
+				txTask.Error = err
+			} else {
+				txTask.Failed = false
+				txTask.UsedGas = msg.Gas() - leftOverGas
+				// Update the state with pending changes
+				ibs.SoftFinalise()
+				//txTask.Error = ibs.FinalizeTx(rules, noop)
+				txTask.Logs = ibs.GetRawLogs(txTask.TxIndex)
+			}
+			return ret, true, nil
+		}
+
+		_, _, _, err := rw.execArgs.Engine.Finalize(rw.execArgs.ChainConfig, types.CopyHeader(header), ibs, txTask.Txs, txTask.Uncles, txTask.BlockReceipts, txTask.Withdrawals, txTask.Requests, rw.chain, syscall, systemCall, txTask.TxIndex, rw.chainTx, rw.logger)
+		if err != nil {
+			log.Error("run system tx err", "block Number", txTask.BlockNum, "txIndex", txTask.TxIndex, "err", err)
+			txTask.Error = err
+		}
 	default:
 		rw.taskGasPool.Reset(txTask.Tx.GetGas(), txTask.Tx.GetBlobGas())
 		if tracer := rw.consumer.NewTracer(); tracer != nil {
@@ -286,9 +292,6 @@ func (rw *HistoricalTraceWorker) RunTxTask(txTask *state.TxTask) {
 		} else {
 			txTask.Failed = applyRes.Failed()
 			txTask.UsedGas = applyRes.UsedGas
-			if txTask.BlockNum%1_000_000 == 0 {
-				log.Info("Exec one tx", "txTask.TxIndex", txTask.TxIndex, " txTask.Failed", txTask.Failed, "txTask.BlockNum", txTask.BlockNum)
-			}
 			// Update the state with pending changes
 			ibs.SoftFinalise()
 			txTask.Logs = ibs.GetRawLogs(txTask.TxIndex)
