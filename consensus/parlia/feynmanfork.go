@@ -4,7 +4,6 @@ import (
 	"container/heap"
 	"errors"
 	"github.com/erigontech/erigon-lib/kv"
-	"github.com/erigontech/erigon-lib/kv/rawdbv3"
 	"math/big"
 
 	"github.com/erigontech/erigon-lib/common"
@@ -100,41 +99,41 @@ func (p *Parlia) updateValidatorSetV2(chain consensus.ChainHeaderReader, ibs *st
 	systemTxCall consensus.SystemTxCall, curIndex *int, txIndex *int, tx kv.Tx,
 ) (bool, error) {
 	// 1. get all validators and its voting header.Nu power
-	parent := chain.GetHeader(header.ParentHash, header.Number.Uint64()-1)
+	//parent := chain.GetHeader(header.ParentHash, header.Number.Uint64()-1)
 
-	_, ok := ibs.StateReader.(*state.HistoryReaderV3)
-	if (validatorItemsCache == nil && maxElectedValidatorsCache == big.NewInt(0)) || ok {
-		stateReader := state.NewHistoryReaderV3()
-		stateReader.SetTx(tx)
-		maxTxNum, _ := rawdbv3.TxNums.Max(tx, header.Number.Uint64()-1)
-		stateReader.SetTxNum(maxTxNum)
-		history := state.New(stateReader)
-		var err error
-		validatorItemsCache, err = p.getValidatorElectionInfo(parent, history)
-		if err != nil {
-			return true, err
-		}
-		maxElectedValidatorsCache, err = p.getMaxElectedValidators(parent, history)
-		if err != nil {
-			return true, err
-		}
-	}
-
-	// 2. sort by voting power
-	eValidators, eVotingPowers, eVoteAddrs := getTopValidatorsByVotingPower(validatorItemsCache, maxElectedValidatorsCache)
-
-	// 3. update validator set to system contract
-	method := "updateValidatorSetV2"
-	data, err := p.validatorSetABI.Pack(method, eValidators, eVotingPowers, eVoteAddrs)
-	if err != nil {
-		log.Error("Unable to pack tx for updateValidatorSetV2", "error", err)
-		return true, err
-	}
+	//_, ok := ibs.StateReader.(*state.HistoryReaderV3)
+	//if (validatorItemsCache == nil && maxElectedValidatorsCache == big.NewInt(0)) || ok {
+	//	stateReader := state.NewHistoryReaderV3()
+	//	stateReader.SetTx(tx)
+	//	maxTxNum, _ := rawdbv3.TxNums.Max(tx, header.Number.Uint64()-1)
+	//	stateReader.SetTxNum(maxTxNum)
+	//	history := state.New(stateReader)
+	//	var err error
+	//	validatorItemsCache, err = p.getValidatorElectionInfo(parent, history)
+	//	if err != nil {
+	//		return true, err
+	//	}
+	//	maxElectedValidatorsCache, err = p.getMaxElectedValidators(parent, history)
+	//	if err != nil {
+	//		return true, err
+	//	}
+	//}
+	//
+	//// 2. sort by voting power
+	//eValidators, eVotingPowers, eVoteAddrs := getTopValidatorsByVotingPower(validatorItemsCache, maxElectedValidatorsCache)
+	//
+	//// 3. update validator set to system contract
+	//method := "updateValidatorSetV2"
+	//data, err := p.validatorSetABI.Pack(method, eValidators, eVotingPowers, eVoteAddrs)
+	//if err != nil {
+	//	log.Error("Unable to pack tx for updateValidatorSetV2", "error", err)
+	//	return true, err
+	//}
 
 	// apply message
 
 	if *curIndex == *txIndex {
-		return p.applyTransaction(header.Coinbase, systemcontracts.ValidatorContract, u256.Num0, data, ibs, header, txs, receipts, systemTxs, usedGas, mining, systemTxCall, curIndex)
+		return p.applyTransaction(header.Coinbase, systemcontracts.ValidatorContract, u256.Num0, (*txs)[*curIndex].GetData(), ibs, header, txs, receipts, systemTxs, usedGas, mining, systemTxCall, curIndex)
 	}
 	*curIndex++
 	return false, nil
