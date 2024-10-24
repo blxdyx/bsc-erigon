@@ -884,28 +884,6 @@ func (p *Parlia) verifyTurnLength(chain consensus.ChainHeaderReader, header *typ
 // Initialize runs any pre-transaction state modifications (e.g. epoch start)
 func (p *Parlia) Initialize(config *chain.Config, chain consensus.ChainHeaderReader, header *types.Header,
 	state *state.IntraBlockState, syscall consensus.SysCallCustom, logger log.Logger, tracer *tracing.Hooks) error {
-	var err error
-	parentHeader := chain.GetHeaderByHash(header.ParentHash)
-	if err = p.verifyValidators(header, parentHeader, state); err != nil {
-		return err
-	}
-	if err = p.verifyTurnLength(chain, header, state); err != nil {
-		return err
-	}
-	// update validators every day
-	if p.chainConfig.IsFeynman(header.Number.Uint64(), header.Time) && isBreatheBlock(parentHeader.Time, header.Time) {
-		// we should avoid update validators in the Feynman upgrade block
-		if !p.chainConfig.IsOnFeynman(header.Number, parentHeader.Time, header.Time) {
-			validatorItemsCache, err = p.getValidatorElectionInfo(parentHeader, state)
-			if err != nil {
-				return err
-			}
-			maxElectedValidatorsCache, err = p.getMaxElectedValidators(parentHeader, state)
-			if err != nil {
-				return err
-			}
-		}
-	}
 	return nil
 }
 
