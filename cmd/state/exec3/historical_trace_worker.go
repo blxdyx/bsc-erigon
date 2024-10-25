@@ -455,14 +455,10 @@ func CustomTraceMapReduce(fromBlock, toBlock uint64, consumer TraceConsumer, ctx
 		params.ApplyBinanceSmartChainParams()
 	}
 	getHeaderFunc := func(hash common.Hash, number uint64) (h *types.Header) {
-		if tx != nil {
+		cfg.ChainDB.View(ctx, func(tx kv.Tx) error {
 			h, _ = cfg.BlockReader.Header(ctx, tx, hash, number)
-		} else {
-			cfg.ChainDB.View(ctx, func(tx kv.Tx) error {
-				h, _ = cfg.BlockReader.Header(ctx, tx, hash, number)
-				return nil
-			})
-		}
+			return nil
+		})
 		return h
 	}
 
