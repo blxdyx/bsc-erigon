@@ -884,28 +884,28 @@ func (p *Parlia) verifyTurnLength(chain consensus.ChainHeaderReader, header *typ
 // Initialize runs any pre-transaction state modifications (e.g. epoch start)
 func (p *Parlia) Initialize(config *chain.Config, chain consensus.ChainHeaderReader, header *types.Header,
 	state *state.IntraBlockState, syscall consensus.SysCallCustom, logger log.Logger, tracer *tracing.Hooks) error {
-	var err error
-	parentHeader := chain.GetHeader(header.ParentHash, header.Number.Uint64()-1)
-	if err = p.verifyValidators(header, parentHeader, state); err != nil {
-		return err
-	}
-	if err = p.verifyTurnLength(chain, header, state); err != nil {
-		return err
-	}
-	// update validators every day
-	if p.chainConfig.IsFeynman(header.Number.Uint64(), header.Time) && isBreatheBlock(parentHeader.Time, header.Time) {
-		// we should avoid update validators in the Feynman upgrade block
-		if !p.chainConfig.IsOnFeynman(header.Number, parentHeader.Time, header.Time) {
-			validatorItemsCache, err = p.getValidatorElectionInfo(parentHeader, state)
-			if err != nil {
-				return err
-			}
-			maxElectedValidatorsCache, err = p.getMaxElectedValidators(parentHeader, state)
-			if err != nil {
-				return err
-			}
-		}
-	}
+	//var err error
+	//parentHeader := chain.GetHeader(header.ParentHash, header.Number.Uint64()-1)
+	//if err = p.verifyValidators(header, parentHeader, state); err != nil {
+	//	return err
+	//}
+	//if err = p.verifyTurnLength(chain, header, state); err != nil {
+	//	return err
+	//}
+	//// update validators every day
+	//if p.chainConfig.IsFeynman(header.Number.Uint64(), header.Time) && isBreatheBlock(parentHeader.Time, header.Time) {
+	//	// we should avoid update validators in the Feynman upgrade block
+	//	if !p.chainConfig.IsOnFeynman(header.Number, parentHeader.Time, header.Time) {
+	//		validatorItemsCache, err = p.getValidatorElectionInfo(parentHeader, state)
+	//		if err != nil {
+	//			return err
+	//		}
+	//		maxElectedValidatorsCache, err = p.getMaxElectedValidators(parentHeader, state)
+	//		if err != nil {
+	//			return err
+	//		}
+	//	}
+	//}
 	return nil
 }
 
@@ -1404,6 +1404,9 @@ func (p *Parlia) distributeToSystem(val libcommon.Address, ibs *state.IntraBlock
 
 			ibs.SetBalance(consensus.SystemAddress, balance.Sub(balance, rewards), tracing.BalanceDecreaseGasBuy)
 			ibs.AddBalance(val, rewards, tracing.BalanceDecreaseGasBuy)
+			if _, ok := ibs.StateReader.(*state.HistoryReaderV3); ok {
+				rewards = (*txs)[*curIndex].GetValue()
+			}
 			if rewards.Cmp(u256.Num0) > 0 {
 				return p.applyTransaction(val, systemcontracts.SystemRewardContract, rewards, nil, ibs, header,
 					txs, receipts, systemTxs, usedGas, mining, systemTxCall, curIndex)
@@ -1422,6 +1425,9 @@ func (p *Parlia) distributeToValidator(val libcommon.Address, ibs *state.IntraBl
 
 	if *curIndex == *txIndex {
 		balance := ibs.GetBalance(consensus.SystemAddress).Clone()
+		if _, ok := ibs.StateReader.(*state.HistoryReaderV3); ok {
+			balance = (*txs)[*curIndex].GetValue()
+		}
 
 		if balance.Cmp(u256.Num0) <= 0 {
 			return false, nil
