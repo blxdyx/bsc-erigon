@@ -504,7 +504,8 @@ func CustomTraceMapReduce(fromBlock, toBlock uint64, consumer TraceConsumer, ctx
 		}
 		if b == nil {
 			// TODO: panic here and see that overall process deadlock
-			return fmt.Errorf("nil block %d", blockNum)
+			//return fmt.Errorf("nil block %d", blockNum)
+			return nil
 		}
 		txs := b.Transactions()
 		header := b.HeaderNoCopy()
