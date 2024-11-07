@@ -994,6 +994,9 @@ func (p *Parlia) finalize(header *types.Header, ibs *state.IntraBlockState, txs 
 			return nil, nil, nil, nil
 		}
 	}
+	if header.Number.Uint64() == 4264 && txIndex == 0 {
+		log.Info("bad block")
+	}
 	if header.Difficulty.Cmp(diffInTurn) != 0 {
 		spoiledVal := snap.inturnValidator()
 		signedRecently := false
