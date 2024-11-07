@@ -391,7 +391,9 @@ func (q *ResultsQueueIter) Close() {
 	q.q.Unlock()
 }
 func (q *ResultsQueueIter) HasNext(outputTxNum uint64) bool {
-	log.Info("Log tx", "outputTxNum", outputTxNum, "rwsIt", (*q.results)[0].TxNum)
+	if len(*q.results) > 0 {
+		log.Info("Log tx", "outputTxNum", outputTxNum, "rwsIt", (*q.results)[0].TxNum)
+	}
 	return len(*q.results) > 0 && (*q.results)[0].TxNum == outputTxNum
 }
 func (q *ResultsQueueIter) PopNext() *TxTask {
