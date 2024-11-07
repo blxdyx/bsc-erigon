@@ -335,7 +335,7 @@ func NewHistoricalTraceWorkers(consumer TraceConsumer, cfg *ExecArgs, ctx contex
 			}
 		}()
 
-		logEvery := time.NewTicker(1 * time.Second)
+		logEvery := time.NewTicker(30 * time.Second)
 		defer logEvery.Stop()
 
 		tx, err := cfg.ChainDB.BeginRo(ctx)
@@ -495,7 +495,7 @@ func CustomTraceMapReduce(fromBlock, toBlock uint64, consumer TraceConsumer, ctx
 	if err != nil {
 		return err
 	}
-	logEvery := time.NewTicker(1 * time.Second)
+	logEvery := time.NewTicker(30 * time.Second)
 	defer logEvery.Stop()
 	for blockNum := fromBlock; blockNum <= toBlock; blockNum++ {
 		var b *types.Block
