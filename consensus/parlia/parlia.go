@@ -1338,19 +1338,19 @@ func (p *Parlia) slash(spoiledVal libcommon.Address, state *state.IntraBlockStat
 	txs *types.Transactions, receipts *types.Receipts, systemTxs *types.Transactions, usedGas *uint64, mining bool,
 	systemTxCall consensus.SystemTxCall, curIndex *int, txIndex *int) (bool, error) {
 	// method
-	method := "slash"
+	//method := "slash"
 
 	// get packed data
-	data, err := p.slashABI.Pack(method,
-		spoiledVal,
-	)
-	if err != nil {
-		p.logger.Error("[parlia] Unable to pack tx for slash", "err", err)
-		return false, err
-	}
+	//data, err := p.slashABI.Pack(method,
+	//	spoiledVal,
+	//)
+	//if err != nil {
+	//	p.logger.Error("[parlia] Unable to pack tx for slash", "err", err)
+	//	return false, err
+	//}
 	// apply message
 	if *curIndex == *txIndex {
-		return p.applyTransaction(header.Coinbase, systemcontracts.SlashContract, u256.Num0, data, state, header, txs, receipts, systemTxs, usedGas, mining, systemTxCall, curIndex)
+		return p.applyTransaction(header.Coinbase, systemcontracts.SlashContract, u256.Num0, (*txs)[*curIndex].GetData(), state, header, txs, receipts, systemTxs, usedGas, mining, systemTxCall, curIndex)
 	}
 	*curIndex++
 	return false, nil
