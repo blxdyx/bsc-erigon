@@ -353,6 +353,7 @@ func NewHistoricalTraceWorkers(consumer TraceConsumer, cfg *ExecArgs, ctx contex
 
 			processedTxNum, _, err := processResultQueueHistorical(consumer, rws, outputTxNum.Load(), ttx, true)
 			if err != nil {
+				log.Info("processResultQueueHistorical", "err", err)
 				return fmt.Errorf("processResultQueueHistorical: %w", err)
 			}
 			if processedTxNum > 0 {
@@ -417,6 +418,9 @@ func processResultQueueHistorical(consumer TraceConsumer, rws *state.ResultsQueu
 	outputTxNum = outputTxNumIn
 	for rwsIt.HasNext(outputTxNum) {
 		txTask := rwsIt.PopNext()
+		if outputTxNum == 747 {
+			log.Info("txNum", "txTask.TxNum", txTask.TxNum, "txTask.BlockNum", txTask.BlockNum)
+		}
 		if txTask.Error != nil {
 			return outputTxNum, false, err
 		}
