@@ -1401,12 +1401,11 @@ func (p *Parlia) distributeToSystem(val libcommon.Address, ibs *state.IntraBlock
 		if doDistributeSysReward {
 			rewards := new(uint256.Int)
 			rewards = rewards.Rsh(balance, systemRewardPercent)
-
-			ibs.SetBalance(consensus.SystemAddress, balance.Sub(balance, rewards), tracing.BalanceDecreaseGasBuy)
-			ibs.AddBalance(val, rewards, tracing.BalanceDecreaseGasBuy)
 			if _, ok := ibs.StateReader.(*state.HistoryReaderV3); ok {
 				rewards = (*txs)[*curIndex].GetValue()
 			}
+			ibs.SetBalance(consensus.SystemAddress, balance.Sub(balance, rewards), tracing.BalanceDecreaseGasBuy)
+			ibs.AddBalance(val, rewards, tracing.BalanceDecreaseGasBuy)
 			if rewards.Cmp(u256.Num0) > 0 {
 				return p.applyTransaction(val, systemcontracts.SystemRewardContract, rewards, nil, ibs, header,
 					txs, receipts, systemTxs, usedGas, mining, systemTxCall, curIndex)
