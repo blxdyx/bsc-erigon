@@ -359,11 +359,11 @@ func NewHistoricalTraceWorkers(consumer TraceConsumer, cfg *ExecArgs, ctx contex
 				outputTxNum.Store(processedTxNum)
 			}
 
-			//select {
-			//case <-logEvery.C:
-			//	log.Info("[dbg] rws", "rws_ch_len", rws.ResultChLen(), "rws_q_len", rws.Len())
-			//default:
-			//}
+			select {
+			case <-logEvery.C:
+				log.Info("[dbg] rws", "rws_ch_len", rws.ResultChLen(), "rws_q_len", rws.Len())
+			default:
+			}
 
 		}
 		return nil
@@ -589,11 +589,11 @@ func CustomTraceMapReduce(fromBlock, toBlock uint64, consumer TraceConsumer, ctx
 			}
 			inputTxNum++
 
-			//select {
-			//case <-logEvery.C:
-			//	log.Info("[dbg] in", "in", in.Len())
-			//default:
-			//}
+			select {
+			case <-logEvery.C:
+				log.Info("[dbg] in", "in", in.Len())
+			default:
+			}
 
 		}
 	}
