@@ -419,7 +419,7 @@ func processResultQueueHistorical(consumer TraceConsumer, rws *state.ResultsQueu
 	for rwsIt.HasNext(outputTxNum) {
 		txTask := rwsIt.PopNext()
 		if outputTxNum == 747 {
-			log.Info("txNum", "txTask.TxNum", txTask.TxNum, "txTask.BlockNum", txTask.BlockNum)
+			log.Info("txNum", "txTask.TxNum", txTask.TxNum, "txTask.BlockNum", txTask.BlockNum, "txTask.TxIndex", txTask.TxIndex, "txTask.Error", txTask.Error)
 		}
 		if txTask.Error != nil {
 			return outputTxNum, false, err
