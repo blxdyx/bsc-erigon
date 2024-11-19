@@ -1337,7 +1337,7 @@ func (p *Parlia) getCurrentValidators(header *types.Header, ibs *state.IntraBloc
 }
 
 // slash spoiled validators
-func (p *Parlia) slash(spoiledVal libcommon.Address, state *state.IntraBlockState, header *types.Header,
+func (p *Parlia) slash(spoiledVal libcommon.Address, ibs *state.IntraBlockState, header *types.Header,
 	txs *types.Transactions, receipts *types.Receipts, systemTxs *types.Transactions, usedGas *uint64, mining bool,
 	systemTxCall consensus.SystemTxCall, curIndex *int, txIndex *int) (bool, error) {
 	// method
@@ -1352,8 +1352,12 @@ func (p *Parlia) slash(spoiledVal libcommon.Address, state *state.IntraBlockStat
 	//	return false, err
 	//}
 	// apply message
+	stateReader := ibs.StateReader.(*state.HistoryReaderV3)
+	txNum := stateReader.GetTxNum() - 1
+	stateReader.SetTxNum(txNum)
+	ibs.StateReader = stateReader
 	if *curIndex == *txIndex {
-		return p.applyTransaction(header.Coinbase, systemcontracts.SlashContract, u256.Num0, (*txs)[*curIndex].GetData(), state, header, txs, receipts, systemTxs, usedGas, mining, systemTxCall, curIndex)
+		return p.applyTransaction(header.Coinbase, systemcontracts.SlashContract, u256.Num0, (*txs)[*curIndex].GetData(), ibs, header, txs, receipts, systemTxs, usedGas, mining, systemTxCall, curIndex)
 	}
 	*curIndex++
 	return false, nil
