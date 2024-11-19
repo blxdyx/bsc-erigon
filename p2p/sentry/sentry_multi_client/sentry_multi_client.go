@@ -482,7 +482,7 @@ func (cs *MultiClient) blockBodies66(ctx context.Context, inreq *proto_sentry.In
 
 	var request eth.BlockRawBodiesPacket66
 	if err := rlp.DecodeBytes(inreq.Data, &request); err != nil {
-		return fmt.Errorf("decode BlockBodiesPacket66: %w, from [%s]", err, sentry.ConvertH512ToPeerID(inreq.PeerId))
+		return fmt.Errorf("decode BlockBodiesPacket66: %w, from [%s]", err, fmt.Sprintf("%x", sentry.ConvertH512ToPeerID(inreq.PeerId))[:8])
 	}
 	txs, uncles, withdrawals, sidecars := request.BlockRawBodiesPacket.Unpack()
 	if len(txs) == 0 && len(uncles) == 0 && len(withdrawals) == 0 {
