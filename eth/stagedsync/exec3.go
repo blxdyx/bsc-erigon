@@ -923,7 +923,7 @@ func flushAndCheckCommitmentV3(ctx context.Context, header *types.Header, applyT
 		return false, errors.New("header is nil")
 	}
 
-	if dbg.DiscardCommitment() {
+	if dbg.DiscardCommitment() && header.Number.Uint64() != 0 {
 		return true, nil
 	}
 	if doms.BlockNum() != header.Number.Uint64() {
