@@ -1295,7 +1295,7 @@ func (sdc *SharedDomainsCommitmentContext) TouchKey(d kv.Domain, key string, val
 
 // Evaluates commitment for processed state.
 func (sdc *SharedDomainsCommitmentContext) ComputeCommitment(ctx context.Context, saveState bool, blockNum uint64, logPrefix string) (rootHash []byte, err error) {
-	if dbg.DiscardCommitment() {
+	if dbg.DiscardCommitment() && blockNum != 0 {
 		sdc.updates.Reset()
 		return nil, nil
 	}
