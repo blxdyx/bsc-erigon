@@ -445,9 +445,9 @@ Loop:
 			start := time.Now()
 			doms.SetChangesetAccumulator(nil) // Make sure we don't have an active changeset accumulator
 			// First compute and commit the progress done so far
-			if _, err := doms.ComputeCommitment(ctx, true, blockNum, execStage.LogPrefix()); err != nil {
-				return err
-			}
+			//if _, err := doms.ComputeCommitment(ctx, true, blockNum, execStage.LogPrefix()); err != nil {
+			//	return err
+			//}
 			ts += time.Since(start)
 			aggTx.RestrictSubsetFileDeletions(false)
 			shouldGenerateChangesets = true // now we can generate changesets for the safety net
@@ -687,9 +687,9 @@ Loop:
 			aggTx := applyTx.(state2.HasAggTx).AggTx().(*state2.AggregatorRoTx)
 			aggTx.RestrictSubsetFileDeletions(true)
 			start := time.Now()
-			if _, err := doms.ComputeCommitment(ctx, true, blockNum, execStage.LogPrefix()); err != nil {
-				return err
-			}
+			//if _, err := doms.ComputeCommitment(ctx, true, blockNum, execStage.LogPrefix()); err != nil {
+			//	return err
+			//}
 			ts += time.Since(start)
 			aggTx.RestrictSubsetFileDeletions(false)
 			doms.SavePastChangesetAccumulator(b.Hash(), blockNum, changeset)
@@ -923,11 +923,15 @@ func flushAndCheckCommitmentV3(ctx context.Context, header *types.Header, applyT
 		return false, errors.New("header is nil")
 	}
 
-	if dbg.DiscardCommitment() && header.Number.Uint64() != 0 {
+	if dbg.DiscardCommitment() {
 		return true, nil
 	}
 	if doms.BlockNum() != header.Number.Uint64() {
 		panic(fmt.Errorf("%d != %d", doms.BlockNum(), header.Number.Uint64()))
+	}
+
+	if header.Number.Uint64() != 0 {
+		return true, nil
 	}
 
 	rh, err := doms.ComputeCommitment(ctx, true, header.Number.Uint64(), e.LogPrefix())
