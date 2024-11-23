@@ -132,7 +132,7 @@ func NewSharedDomains(tx kv.Tx, logger log.Logger) (*SharedDomains, error) {
 	}
 
 	sd.SetTxNum(0)
-	sd.sdCtx = NewSharedDomainsCommitmentContext(sd, commitment.ModeDirect, commitment.VariantHexPatriciaTrie)
+	sd.sdCtx = NewSharedDomainsCommitmentContext(sd, commitment.ModeDisabled, commitment.VariantHexPatriciaTrie)
 
 	if _, err := sd.SeekCommitment(context.Background(), tx); err != nil {
 		return nil, err
@@ -1297,7 +1297,6 @@ func (sdc *SharedDomainsCommitmentContext) TouchKey(d kv.Domain, key string, val
 func (sdc *SharedDomainsCommitmentContext) ComputeCommitment(ctx context.Context, saveState bool, blockNum uint64, logPrefix string) (rootHash []byte, err error) {
 	if dbg.DiscardCommitment() {
 		sdc.updates.Reset()
-		return nil, nil
 	}
 	sdc.ResetBranchCache()
 	defer sdc.ResetBranchCache()
