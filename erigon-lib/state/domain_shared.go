@@ -385,6 +385,10 @@ func (sd *SharedDomains) ClearRam(resetCommitment bool) {
 	sd.estSize = 0
 }
 
+func (sd *SharedDomains) ResetCommitment() {
+	sd.sdCtx.updates.Reset()
+}
+
 func (sd *SharedDomains) put(domain kv.Domain, key string, val []byte) {
 	// disable mutex - because work on parallel execution postponed after E3 release.
 	//sd.muMaps.Lock()
@@ -1297,6 +1301,7 @@ func (sdc *SharedDomainsCommitmentContext) TouchKey(d kv.Domain, key string, val
 func (sdc *SharedDomainsCommitmentContext) ComputeCommitment(ctx context.Context, saveState bool, blockNum uint64, logPrefix string) (rootHash []byte, err error) {
 	if dbg.DiscardCommitment() {
 		sdc.updates.Reset()
+		return nil, nil
 	}
 	sdc.ResetBranchCache()
 	defer sdc.ResetBranchCache()
