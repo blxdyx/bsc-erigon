@@ -439,7 +439,7 @@ func FillDBFromSnapshots(logPrefix string, ctx context.Context, tx kv.RwTx, dirs
 						if blockNum%parlia.CheckpointInterval == 0 {
 							// Fill bsc consensus snapshots may have some conditions for validators snapshots
 							if err := posa.ResetSnapshot(chainReader, headers); err != nil {
-								log.Error("reset parlia snapshots", "err", err)
+								log.Error("reset parlia snapshots", "snapshotProgress", snapshotProgress, "err", err)
 								return err
 							}
 							headers = []*types.Header{}
