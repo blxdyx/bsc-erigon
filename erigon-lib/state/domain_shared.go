@@ -320,7 +320,7 @@ func (sd *SharedDomains) SeekCommitment(ctx context.Context, tx kv.Tx) (txsFromB
 	if err != nil {
 		return 0, err
 	}
-	if ok {
+	if ok && bn != 0 {
 		if bn > 0 {
 			lastBn, _, err := rawdbv3.TxNums.Last(tx)
 			if err != nil {
