@@ -911,14 +911,20 @@ func (sd *SharedDomains) Flush(ctx context.Context, tx kv.RwTx) error {
 	sd.pastChangesAccumulator = make(map[string]*StateChangeSet)
 
 	defer mxFlushTook.ObserveDuration(time.Now())
-	fh, err := sd.ComputeCommitment(ctx, true, sd.BlockNum(), "flush-commitment")
-	if err != nil {
-		return err
+	var err error
+	if sd.BlockNum() == 0 {
+		fh, err := sd.ComputeCommitment(ctx, true, sd.BlockNum(), "flush-commitment")
+		if err != nil {
+			return err
+		}
+		if sd.trace {
+			_, f, l, _ := runtime.Caller(1)
+			fmt.Printf("[SD aggTx=%d] FLUSHING at tx %d [%x], caller %s:%d\n", sd.aggTx.id, sd.TxNum(), fh, filepath.Base(f), l)
+		}
+	} else {
+		sd.ResetCommitment()
 	}
-	if sd.trace {
-		_, f, l, _ := runtime.Caller(1)
-		fmt.Printf("[SD aggTx=%d] FLUSHING at tx %d [%x], caller %s:%d\n", sd.aggTx.id, sd.TxNum(), fh, filepath.Base(f), l)
-	}
+
 	for _, w := range sd.domainWriters {
 		if w == nil {
 			continue
