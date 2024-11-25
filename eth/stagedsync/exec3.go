@@ -932,7 +932,6 @@ func flushAndCheckCommitmentV3(ctx context.Context, header *types.Header, applyT
 	var err error
 	if header.Number.Uint64() != 0 {
 		doms.ResetCommitment()
-		return true, nil
 	} else {
 		_, err := doms.ComputeCommitment(ctx, true, header.Number.Uint64(), e.LogPrefix())
 		if err != nil {
