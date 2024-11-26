@@ -686,9 +686,10 @@ Loop:
 			aggTx := applyTx.(state2.HasAggTx).AggTx().(*state2.AggregatorRoTx)
 			aggTx.RestrictSubsetFileDeletions(true)
 			start := time.Now()
-			if _, err := doms.ComputeCommitment(ctx, true, blockNum, execStage.LogPrefix()); err != nil {
-				return err
-			}
+			_ = doms.SaveCommitment(blockNum, b.Root().Bytes())
+			//if _, err := doms.ComputeCommitment(ctx, true, blockNum, execStage.LogPrefix()); err != nil {
+			//	return err
+			//}
 			ts += time.Since(start)
 			aggTx.RestrictSubsetFileDeletions(false)
 			doms.SavePastChangesetAccumulator(b.Hash(), blockNum, changeset)
@@ -933,6 +934,7 @@ func flushAndCheckCommitmentV3(ctx context.Context, header *types.Header, applyT
 	var err error
 	if header.Number.Uint64() != 0 {
 		doms.ResetCommitment()
+		_ = doms.SaveCommitment(doms.BlockNum(), header.Root.Bytes())
 	} else {
 		_, err := doms.ComputeCommitment(ctx, true, header.Number.Uint64(), e.LogPrefix())
 		if err != nil {

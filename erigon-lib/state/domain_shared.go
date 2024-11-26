@@ -320,7 +320,7 @@ func (sd *SharedDomains) SeekCommitment(ctx context.Context, tx kv.Tx) (txsFromB
 	if err != nil {
 		return 0, err
 	}
-	if ok && bn != 0 {
+	if ok {
 		if bn > 0 {
 			lastBn, _, err := rawdbv3.TxNums.Last(tx)
 			if err != nil {
@@ -334,10 +334,6 @@ func (sd *SharedDomains) SeekCommitment(ctx context.Context, tx kv.Tx) (txsFromB
 		sd.SetTxNum(txn)
 		return 0, nil
 	}
-	if len(sd.aggTx.d[kv.CommitmentDomain].files) > 0 {
-		txn = sd.aggTx.d[kv.CommitmentDomain].files[len(sd.aggTx.d[kv.CommitmentDomain].files)-1].endTxNum
-		sd.SetTxNum(txn)
-	}
 	// handle case when we have no commitment, but have executed blocks
 	bnBytes, err := tx.GetOne(kv.SyncStageProgress, []byte("Execution")) //TODO: move stages to erigon-lib
 	if err != nil {
@@ -350,7 +346,7 @@ func (sd *SharedDomains) SeekCommitment(ctx context.Context, tx kv.Tx) (txsFromB
 			return 0, err
 		}
 	}
-	sd.logger.Info("seeking commitment", "bn", bn, "txn", tx)
+	sd.logger.Info("seeking commitment", "bn", bn, "txn", txn)
 	if bn == 0 && txn == 0 {
 		sd.SetBlockNum(0)
 		sd.SetTxNum(0)
@@ -392,6 +388,10 @@ func (sd *SharedDomains) ClearRam(resetCommitment bool) {
 
 func (sd *SharedDomains) ResetCommitment() {
 	sd.sdCtx.updates.Reset()
+}
+
+func (sd *SharedDomains) SaveCommitment(blockNum uint64, rootHash []byte) error {
+	return sd.sdCtx.storeCommitmentState(blockNum, rootHash)
 }
 
 func (sd *SharedDomains) put(domain kv.Domain, key string, val []byte) {
