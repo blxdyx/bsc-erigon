@@ -334,6 +334,10 @@ func (sd *SharedDomains) SeekCommitment(ctx context.Context, tx kv.Tx) (txsFromB
 		sd.SetTxNum(txn)
 		return 0, nil
 	}
+	if len(sd.aggTx.d[kv.CommitmentDomain].files) > 0 {
+		txn = sd.aggTx.d[kv.CommitmentDomain].files[len(sd.aggTx.d[kv.CommitmentDomain].files)-1].endTxNum
+		sd.SetTxNum(txn)
+	}
 	// handle case when we have no commitment, but have executed blocks
 	bnBytes, err := tx.GetOne(kv.SyncStageProgress, []byte("Execution")) //TODO: move stages to erigon-lib
 	if err != nil {
@@ -346,6 +350,7 @@ func (sd *SharedDomains) SeekCommitment(ctx context.Context, tx kv.Tx) (txsFromB
 			return 0, err
 		}
 	}
+	sd.logger.Info("seeking commitment", "bn", bn, "txn", tx)
 	if bn == 0 && txn == 0 {
 		sd.SetBlockNum(0)
 		sd.SetTxNum(0)
@@ -353,20 +358,20 @@ func (sd *SharedDomains) SeekCommitment(ctx context.Context, tx kv.Tx) (txsFromB
 	}
 	sd.SetBlockNum(bn)
 	sd.SetTxNum(txn)
-	newRh, err := sd.rebuildCommitment(ctx, tx, bn)
-	if err != nil {
-		return 0, err
-	}
-	if bytes.Equal(newRh, commitment.EmptyRootHash) {
-		sd.SetBlockNum(0)
-		sd.SetTxNum(0)
-		return 0, nil
-	}
-	if sd.trace {
-		fmt.Printf("rebuilt commitment %x %d %d\n", newRh, sd.TxNum(), sd.BlockNum())
-	}
-	sd.SetBlockNum(bn)
-	sd.SetTxNum(txn)
+	//newRh, err := sd.rebuildCommitment(ctx, tx, bn)
+	//if err != nil {
+	//	return 0, err
+	//}
+	//if bytes.Equal(newRh, commitment.EmptyRootHash) {
+	//	sd.SetBlockNum(0)
+	//	sd.SetTxNum(0)
+	//	return 0, nil
+	//}
+	//if sd.trace {
+	//	fmt.Printf("rebuilt commitment %x %d %d\n", newRh, sd.TxNum(), sd.BlockNum())
+	//}
+	//sd.SetBlockNum(bn)
+	//sd.SetTxNum(txn)
 	return 0, nil
 }
 
