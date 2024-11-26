@@ -738,6 +738,7 @@ Loop:
 				needCalcRoot := rs.SizeEstimate() >= commitThreshold ||
 					skipPostEvaluation || // If we skip post evaluation, then we should compute root hash ASAP for fail-fast
 					aggregatorRo.CanPrune(applyTx, outputTxNum.Load()) // if have something to prune - better prune ASAP to keep chaindata smaller
+				logger.Info("calc root", "rs.SizeEstimate() >= commitThreshold", rs.SizeEstimate() >= commitThreshold, "rs.SizeEstimate()", rs.SizeEstimate(), "skipPostEvaluation", skipPostEvaluation)
 				if !needCalcRoot {
 					break
 				}
