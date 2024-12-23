@@ -15,7 +15,7 @@ import (
 	"github.com/erigontech/erigon/core/types"
 )
 
-const SecondsPerDay uint64 = 86400
+const SecondsPerDay uint64 = 600
 
 // the params should be two blocks' time(timestamp)
 func sameDayInUTC(first, second uint64) bool {
