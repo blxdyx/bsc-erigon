@@ -9,6 +9,7 @@ import (
 	"github.com/erigontech/erigon/consensus/parlia/finality"
 	"github.com/erigontech/erigon/core/tracing"
 	"github.com/erigontech/erigon/core/vm/evmtypes"
+	"github.com/holiman/uint256"
 	"io"
 	"math/big"
 	"sort"
@@ -45,7 +46,6 @@ import (
 	"github.com/erigontech/erigon/params"
 	"github.com/erigontech/erigon/rlp"
 	"github.com/erigontech/erigon/rpc"
-	"github.com/holiman/uint256"
 )
 
 const (
@@ -962,7 +962,7 @@ func (p *Parlia) finalize(header *types.Header, ibs *state.IntraBlockState, txs 
 		if txIndex == len(txs)-1 && finish {
 			if fs := finality.GetFinalizationService(); fs != nil {
 				curSnap, _ := p.snapshot(chain, number, header.Hash(), nil, true)
-				if curSnap.Attestation != nil {
+				if curSnap != nil && curSnap.Attestation != nil {
 					fs.UpdateFinality(curSnap.Attestation.SourceHash, curSnap.Attestation.TargetHash)
 				}
 			}
