@@ -607,7 +607,11 @@ func (iit *InvertedIndexRoTx) seekInFiles(key []byte, txNum uint64) (found bool,
 
 		g := iit.statelessGetter(i)
 		g.Reset(offset)
-		log.Info("inverted_index", "fileName", g.FileName(), "key", key, "txNum", txNum, "startTxNum", iit.files[i].startTxNum, "endTxNum", iit.files[i].endTxNum, "equalOrHigherTxNum", equalOrHigherTxNum)
+		defer func() {
+			if r := recover(); r != nil {
+				log.Info("inverted_index", "fileName", g.FileName(), "key", key, "txNum", txNum, "startTxNum", iit.files[i].startTxNum, "endTxNum", iit.files[i].endTxNum, "equalOrHigherTxNum", equalOrHigherTxNum)
+			}
+		}()
 		k, _ := g.Next(nil)
 		if !bytes.Equal(k, key) {
 			continue
