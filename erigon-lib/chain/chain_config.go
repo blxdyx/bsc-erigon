@@ -337,7 +337,7 @@ func (c *Config) IsCancun(num uint64, time uint64) bool {
 
 // IsPrague returns whether time is either equal to the Prague fork time or greater.
 func (c *Config) IsPrague(time uint64) bool {
-	return isForked(big.NewInt(1747104702), time)
+	return isForked(c.PragueTime, time)
 }
 
 // IsOnPrague returns whether currentBlockTime is either equal to the Prague  fork time or greater firstly.
