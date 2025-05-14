@@ -515,13 +515,13 @@ func (hd *HeaderDownload) RequestSkeleton() *HeaderRequest {
 	if hd.initialCycle {
 		stride = 192
 	}
-	var length uint64 = 192
+	var length uint64 = 1024
 	// Include one header that we have already, to make sure the responses are not empty and do not get penalised when we are at the tip of the chain
 	from := hd.highestInDb
 	if from <= 1 {
 		from = 1
 	} else {
-		from--
+		from++
 	}
 
 	return &HeaderRequest{Number: from, Length: length, Skip: stride, Reverse: false}
