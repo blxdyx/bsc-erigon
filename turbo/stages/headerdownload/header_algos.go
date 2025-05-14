@@ -1115,6 +1115,7 @@ func (hd *HeaderDownload) ProcessHeader(sh ChainSegmentHeader, newBlock bool, pe
 			return false
 		}
 	}
+	log.Info("move to insert", "blockNumber", sh.Number, "hash", sh.Header.Hash(), "time.Since", time.Since(time.Unix(int64(sh.Header.Time), 0)))
 	link := hd.addHeaderAsLink(sh, false /* persisted */)
 	if foundAnchor {
 		// The new link is what anchor was pointing to, so the link takes over the child links of the anchor and the anchor is removed
@@ -1134,7 +1135,6 @@ func (hd *HeaderDownload) ProcessHeader(sh ChainSegmentHeader, newBlock bool, pe
 		parent.fChild = link
 		if parent.persisted {
 			link.linked = true
-			log.Info("move to insert", "blockNumber", link.header.Number, "hash", link.hash, "time.Since", time.Since(time.Unix(int64(link.header.Time), 0)))
 			hd.moveLinkToQueue(link, InsertQueueID)
 		}
 	} else {
