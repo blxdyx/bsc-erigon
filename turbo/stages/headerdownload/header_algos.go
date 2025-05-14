@@ -1134,6 +1134,7 @@ func (hd *HeaderDownload) ProcessHeader(sh ChainSegmentHeader, newBlock bool, pe
 		parent.fChild = link
 		if parent.persisted {
 			link.linked = true
+			log.Info("move to insert", "blockNumber", link.header.Number, "hash", link.hash, "time.Since", time.Since(time.Unix(int64(link.header.Time), 0)))
 			hd.moveLinkToQueue(link, InsertQueueID)
 		}
 	} else {
