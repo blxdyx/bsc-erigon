@@ -240,7 +240,7 @@ func NewMultiClient(
 
 func (cs *MultiClient) Sentries() []proto_sentry.SentryClient { return cs.sentries }
 
-func (cs *MultiClient) newBlockHashes66(ctx context.Context, req *proto_sentry.InboundMessage, sentry proto_sentry.SentryClient) error {
+func (cs *MultiClient) newBlockHashes66(ctx context.Context, req *proto_sentry.InboundMessage, sentryClient proto_sentry.SentryClient) error {
 	if cs.disableBlockDownload {
 		return nil
 	}
@@ -258,7 +258,7 @@ func (cs *MultiClient) newBlockHashes66(ctx context.Context, req *proto_sentry.I
 		if cs.Hd.HasLink(announce.Hash) {
 			continue
 		}
-		//cs.logger.Info(fmt.Sprintf("Sending header request {hash: %x, height: %d, length: %d}", announce.Hash, announce.Number, 1))
+		cs.logger.Info(fmt.Sprintf("NewBlockHash, Sending header request {hash: %x, height: %d, length: %d}", announce.Hash, announce.Number, 1))
 		b, err := rlp.EncodeToBytes(&eth.GetBlockHeadersPacket66{
 			RequestId: rand.Uint64(), // nolint: gosec
 			GetBlockHeadersPacket: &eth.GetBlockHeadersPacket{
@@ -279,7 +279,7 @@ func (cs *MultiClient) newBlockHashes66(ctx context.Context, req *proto_sentry.I
 			},
 		}
 
-		if _, err = sentry.SendMessageById(ctx, &outreq, &grpc.EmptyCallOption{}); err != nil {
+		if _, err = sentryClient.SendMessageById(ctx, &outreq, &grpc.EmptyCallOption{}); err != nil {
 			if isPeerNotFoundErr(err) {
 				continue
 			}
@@ -362,8 +362,8 @@ func (cs *MultiClient) blockHeaders(ctx context.Context, pkt eth.BlockHeadersPac
 		}
 	} else {
 		sort.Sort(headerdownload.HeadersSort(csHeaders)) // Sorting by order of block heights
+		log.Debug("newBlockHeaders", "number", csHeaders[0].Number, "hash", csHeaders[0].Hash, "PeerID", fmt.Sprintf("%x", sentry.ConvertH512ToPeerID(peerID))[:8])
 		canRequestMore := cs.Hd.ProcessHeaders(csHeaders, false /* newBlock */, sentry.ConvertH512ToPeerID(peerID))
-
 		if canRequestMore {
 			currentTime := time.Now()
 			req, penalties := cs.Hd.RequestMoreHeaders(currentTime)
@@ -423,7 +423,6 @@ func (cs *MultiClient) newBlock66(ctx context.Context, inreq *proto_sentry.Inbou
 		request.Block = request.Block.WithSidecars(request.Sidecars)
 	}
 
-	log.Trace("NewBlockMsg", "number", request.Block.NumberU64(), "hash", request.Block.Hash(), "Sidecar", len(request.Sidecars), "PeerID", fmt.Sprintf("%x", sentry.ConvertH512ToPeerID(inreq.PeerId))[:8])
 	if segments, penalty, err := cs.Hd.SingleHeaderAsSegment(headerRaw, request.Block.Header(), true /* penalizePoSBlocks */); err == nil {
 		if penalty == headerdownload.NoPenalty {
 			propagate := !cs.ChainConfig.TerminalTotalDifficultyPassed
@@ -440,7 +439,7 @@ func (cs *MultiClient) newBlock66(ctx context.Context, inreq *proto_sentry.Inbou
 					},
 				})
 			}
-
+			log.Debug("NewBlock66", "number", request.Block.NumberU64(), "hash", request.Block.Hash(), "Sidecar", len(request.Sidecars), "PeerID", fmt.Sprintf("%x", sentry.ConvertH512ToPeerID(inreq.PeerId))[:8])
 			cs.Hd.ProcessHeaders(segments, true /* newBlock */, sentry.ConvertH512ToPeerID(inreq.PeerId)) // There is only one segment in this case
 		} else {
 			outreq := proto_sentry.PenalizePeerRequest{
