@@ -247,7 +247,7 @@ func BodiesForward(s *StageState, u Unwinder, ctx context.Context, tx kv.RwTx, c
 					return true, nil
 				}
 
-				metrics.UpdateBlockConsumerBodyDownloadDelay(header.Time, header.Number.Uint64(), logger)
+				metrics.UpdateBlockConsumerBodyDownloadDelay(header.MilliTimestamp(), header.Number.Uint64(), logger)
 
 				if cfg.chanConfig.Parlia != nil && cfg.chanConfig.IsCancun(headerNumber, header.Time) {
 					if err = core.IsDataAvailable(cr, header, rawBody, cfg.bd.LatestBlockTime); err != nil {
