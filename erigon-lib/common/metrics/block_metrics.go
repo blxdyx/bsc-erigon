@@ -42,8 +42,8 @@ var (
 	BlockConsumerPostExecutionDelayHistogram  = metrics.NewHistogram(`block_consumer_delay_hist{type="post_execution"}`, delayBuckets)
 )
 
-func UpdateBlockConsumerHeaderDownloadDelay(blockTime uint64, blockNumber uint64, log log.Logger) {
-	t := time.Unix(int64(blockTime), 0)
+func UpdateBlockConsumerHeaderDownloadDelay(MilliTimestamp uint64, blockNumber uint64, log log.Logger) {
+	t := time.UnixMilli(int64(MilliTimestamp))
 	BlockConsumerHeaderDownloadDelay.ObserveDuration(t)
 	BlockConsumerHeaderDownloadDelayHistogram.ObserveDuration(t)
 
@@ -52,8 +52,8 @@ func UpdateBlockConsumerHeaderDownloadDelay(blockTime uint64, blockNumber uint64
 	}
 }
 
-func UpdateBlockConsumerBodyDownloadDelay(blockTime uint64, blockNumber uint64, log log.Logger) {
-	t := time.Unix(int64(blockTime), 0)
+func UpdateBlockConsumerBodyDownloadDelay(MilliTimestamp uint64, blockNumber uint64, log log.Logger) {
+	t := time.UnixMilli(int64(MilliTimestamp))
 	BlockConsumerBodyDownloadDelay.ObserveDuration(t)
 	BlockConsumerBodyDownloadDelayHistogram.ObserveDuration(t)
 

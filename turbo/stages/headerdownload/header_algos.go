@@ -581,7 +581,7 @@ func (hd *HeaderDownload) InsertHeader(hf FeedHeaderFunc, terminalTotalDifficult
 		default:
 		}
 
-		metrics.UpdateBlockConsumerHeaderDownloadDelay(link.header.Time, link.header.Number.Uint64(), hd.logger)
+		metrics.UpdateBlockConsumerHeaderDownloadDelay(link.header.MilliTimestamp(), link.header.Number.Uint64(), hd.logger)
 
 		td, err := hf(link.header, link.headerRaw, hd.highestHashInDb, hd.highestInDb)
 		if err != nil {
@@ -1118,7 +1118,7 @@ func (hd *HeaderDownload) ProcessHeader(sh ChainSegmentHeader, newBlock bool, pe
 			return false
 		}
 	}
-	log.Info("move to insert", "blockNumber", sh.Number, "hash", sh.Header.Hash(), "time.Since", time.Since(time.Unix(int64(sh.Header.Time), 0)))
+	log.Info("move to insert", "blockNumber", sh.Number, "hash", sh.Header.Hash(), "time.Since", time.Since(time.UnixMilli(int64(sh.Header.MilliTimestamp()))))
 	link := hd.addHeaderAsLink(sh, false /* persisted */)
 	if foundAnchor {
 		// The new link is what anchor was pointing to, so the link takes over the child links of the anchor and the anchor is removed
