@@ -52,7 +52,6 @@ func (se *serialExecutor) execute(ctx context.Context, tasks []*state.TxTask, gp
 			}
 
 			se.txCount++
-			log.Debug("print gasused", "se.usedGas", se.usedGas, "tx.UsedGas", txTask.UsedGas)
 			se.usedGas += txTask.UsedGas
 			mxExecGas.Add(float64(txTask.UsedGas))
 			mxExecTransactions.Add(1)
