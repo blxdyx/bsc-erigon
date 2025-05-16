@@ -415,10 +415,11 @@ func (hd *HeaderDownload) RequestMoreHeaders(currentTime time.Time) (*HeaderRequ
 			dataflow.HeaderDownloadStates.AddChange(anchor.blockHeight-1, dataflow.HeaderRetryNotReady)
 			return true
 		}
-		if anchor.timeouts >= 10 {
+		if anchor.timeouts >= 3 {
 			// Ancestors of this anchor seem to be unavailable, invalidate and move on
 			hd.invalidateAnchor(anchor, "suspected unavailability")
 			// Add header invalidate
+			hd.logger.Debug("[downloader] Request More header timeouts", "number", anchor.blockHeight-1, "length", 192)
 			dataflow.HeaderDownloadStates.AddChange(anchor.blockHeight-1, dataflow.HeaderInvalidated)
 			penalties = append(penalties, PenaltyItem{Penalty: AbandonedAnchorPenalty, PeerID: anchor.peerID})
 			return true
@@ -431,6 +432,8 @@ func (hd *HeaderDownload) RequestMoreHeaders(currentTime time.Time) (*HeaderRequ
 			Skip:    0,
 			Reverse: true,
 		}
+
+		hd.logger.Debug("[downloader] Request More header", "number", anchor.blockHeight-1, "length", 192)
 		// Add header requested
 		return false
 	})

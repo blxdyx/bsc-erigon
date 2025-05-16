@@ -365,6 +365,7 @@ func (cs *MultiClient) blockHeaders(ctx context.Context, pkt eth.BlockHeadersPac
 		log.Debug("newBlockHeaders", "number", csHeaders[0].Number, "hash", csHeaders[0].Hash, "PeerID", fmt.Sprintf("%x", sentry.ConvertH512ToPeerID(peerID))[:8])
 		canRequestMore := cs.Hd.ProcessHeaders(csHeaders, false /* newBlock */, sentry.ConvertH512ToPeerID(peerID))
 		if canRequestMore {
+			log.Debug("canRequestMore")
 			currentTime := time.Now()
 			req, penalties := cs.Hd.RequestMoreHeaders(currentTime)
 			if req != nil {
