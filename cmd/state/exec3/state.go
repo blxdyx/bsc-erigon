@@ -299,7 +299,7 @@ func (rw *Worker) RunTxTaskNoLock(txTask *state.TxTask, isMining, skipPostEvalua
 		}
 
 		systemCall := func(ibs *state.IntraBlockState) ([]byte, bool, error) {
-			rw.taskGasPool.Reset(txTask.Tx.GetGas(), rw.chainConfig.GetMaxBlobGasPerBlock(header.Time))
+			//rw.taskGasPool.Reset(txTask.Tx.GetGas(), rw.chainConfig.GetMaxBlobGasPerBlock(header.Time))
 			rw.callTracer.Reset()
 			rw.vmCfg.SkipAnalysis = txTask.SkipAnalysis
 			msg := txTask.TxAsMessage
