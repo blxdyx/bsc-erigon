@@ -258,7 +258,7 @@ func (cs *MultiClient) newBlockHashes66(ctx context.Context, req *proto_sentry.I
 		if cs.Hd.HasLink(announce.Hash) {
 			continue
 		}
-		cs.logger.Info(fmt.Sprintf("NewBlockHash, Sending header request {hash: %x, height: %d, length: %d}", announce.Hash, announce.Number, 1))
+		cs.logger.Info(fmt.Sprintf("NewBlockHash, Sending header request {hash: %x, height: %d, length: %d}", announce.Hash, announce.Number, 1), "peerID", fmt.Sprintf("%x", sentry.ConvertH512ToPeerID(req.PeerId))[:8])
 		b, err := rlp.EncodeToBytes(&eth.GetBlockHeadersPacket66{
 			RequestId: rand.Uint64(), // nolint: gosec
 			GetBlockHeadersPacket: &eth.GetBlockHeadersPacket{
