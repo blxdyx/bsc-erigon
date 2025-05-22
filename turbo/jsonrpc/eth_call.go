@@ -77,6 +77,7 @@ func (api *APIImpl) Call(ctx context.Context, args ethapi2.CallArgs, blockNrOrHa
 
 	if args.Gas == nil || uint64(*args.Gas) == 0 {
 		args.Gas = (*hexutil.Uint64)(&api.GasCap)
+		log.Info("eth_call", "gasCap", args.Gas)
 	}
 
 	blockNumber, hash, _, err := rpchelper.GetCanonicalBlockNumber(ctx, blockNrOrHash, tx, api._blockReader, api.filters) // DoCall cannot be executed on non-canonical blocks
