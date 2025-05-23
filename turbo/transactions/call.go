@@ -112,7 +112,6 @@ func DoCall(
 	gp := new(core.GasPool).AddGas(msg.Gas()).AddBlobGas(msg.BlobGas())
 	result, err := core.ApplyMessage(evm, msg, gp, true /* refunds */, false /* gasBailout */)
 	if err != nil {
-		log.Error("Call", "err", err)
 		return nil, err
 	}
 
