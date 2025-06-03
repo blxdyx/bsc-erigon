@@ -56,6 +56,10 @@ func (se *serialExecutor) execute(ctx context.Context, tasks []*state.TxTask, gp
 			mxExecGas.Add(float64(txTask.GasUsed))
 			mxExecTransactions.Add(1)
 
+			if txTask.BlockNum == 35 {
+				log.Info("BAD block", "block number", txTask.BlockNum, "TxIndex", txTask.TxIndex, "txTask.GasUsed", txTask.GasUsed)
+			}
+
 			if txTask.Tx != nil {
 				se.blobGasUsed += txTask.Tx.GetBlobGas()
 			}
