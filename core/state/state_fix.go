@@ -1,7 +1,7 @@
 package state
 
 import (
-	libcommon "github.com/erigontech/erigon-lib/common"
+	"github.com/erigontech/erigon-lib/common"
 	"github.com/erigontech/erigon-lib/common/hexutil"
 	"github.com/holiman/uint256"
 )
@@ -19,8 +19,8 @@ const (
 type HotFixPattern struct {
 	blockNumber uint64
 	txIndex     int
-	txHash      libcommon.Hash
-	addr        libcommon.Address
+	txHash      common.Hash
+	addr        common.Address
 	kvList      Storage
 }
 
@@ -28,29 +28,29 @@ var patches = []HotFixPattern{
 	{
 		blockNumber: BscBlockNum,
 		txIndex:     Bsc1Index,
-		txHash:      libcommon.HexToHash("0x7eba4edc7c1806d6ee1691d43513838931de5c94f9da56ec865721b402f775b0"),
-		addr:        libcommon.HexToAddress("0x00000000001f8b68515EfB546542397d3293CCfd"),
+		txHash:      common.HexToHash("0x7eba4edc7c1806d6ee1691d43513838931de5c94f9da56ec865721b402f775b0"),
+		addr:        common.HexToAddress("0x00000000001f8b68515EfB546542397d3293CCfd"),
 		kvList:      createBsc1KVs(),
 	},
 	{
 		blockNumber: BscBlockNum,
 		txIndex:     Bsc2Index,
-		txHash:      libcommon.HexToHash("0x5217324f0711af744fe8e12d73f13fdb11805c8e29c0c095ac747b7e4563e935"),
-		addr:        libcommon.HexToAddress("0x00000000001f8b68515EfB546542397d3293CCfd"),
+		txHash:      common.HexToHash("0x5217324f0711af744fe8e12d73f13fdb11805c8e29c0c095ac747b7e4563e935"),
+		addr:        common.HexToAddress("0x00000000001f8b68515EfB546542397d3293CCfd"),
 		kvList:      createBsc2KVs(),
 	},
 	{
 		blockNumber: Chapel1BlockNum,
 		txIndex:     Chapel1TxIndex,
-		txHash:      libcommon.HexToHash("0x7ce9a3cf77108fcc85c1e84e88e363e3335eca515dfcf2feb2011729878b13a7"),
-		addr:        libcommon.HexToAddress("0x89791428868131eb109e42340ad01eb8987526b2"),
+		txHash:      common.HexToHash("0x7ce9a3cf77108fcc85c1e84e88e363e3335eca515dfcf2feb2011729878b13a7"),
+		addr:        common.HexToAddress("0x89791428868131eb109e42340ad01eb8987526b2"),
 		kvList:      createChapel1KVs(),
 	},
 	{
 		blockNumber: Chapel2BlockNum,
 		txIndex:     Chapel2TxIndex,
-		txHash:      libcommon.HexToHash("0xe3895eb95605d6b43ceec7876e6ff5d1c903e572bf83a08675cb684c047a695c"),
-		addr:        libcommon.HexToAddress("0x89791428868131eb109e42340ad01eb8987526b2"),
+		txHash:      common.HexToHash("0xe3895eb95605d6b43ceec7876e6ff5d1c903e572bf83a08675cb684c047a695c"),
+		addr:        common.HexToAddress("0x89791428868131eb109e42340ad01eb8987526b2"),
 		kvList:      createChapel2KVs(),
 	},
 }
@@ -113,7 +113,7 @@ func createChapel2KVs() Storage {
 func createKVs(data map[string]string) Storage {
 	kvList := make(Storage)
 	for k, v := range data {
-		kvList[libcommon.HexToHash(k)] = *new(uint256.Int).SetBytes(hexutil.MustDecode(v))
+		kvList[common.HexToHash(k)] = *new(uint256.Int).SetBytes(hexutil.MustDecode(v))
 	}
 	return kvList
 }

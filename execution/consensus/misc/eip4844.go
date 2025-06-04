@@ -22,7 +22,7 @@ package misc
 import (
 	"errors"
 	"fmt"
-	libcommon "github.com/erigontech/erigon-lib/common"
+	"github.com/erigontech/erigon-lib/common"
 	"github.com/erigontech/erigon-lib/common/empty"
 
 	"github.com/holiman/uint256"
@@ -147,7 +147,7 @@ func VerifyPresenceOfBohrHeaderFields(header *types.Header) error {
 	if header.ExcessBlobGas == nil {
 		return errors.New("header is missing excessBlobGas")
 	}
-	if header.ParentBeaconBlockRoot == nil || *header.ParentBeaconBlockRoot != (libcommon.Hash{}) {
+	if header.ParentBeaconBlockRoot == nil || *header.ParentBeaconBlockRoot != (common.Hash{}) {
 		return fmt.Errorf("invalid parentBeaconRoot, have %#x, expected zero hash", header.ParentBeaconBlockRoot)
 	}
 	if header.WithdrawalsHash == nil || *header.WithdrawalsHash != empty.WithdrawalsHash {
