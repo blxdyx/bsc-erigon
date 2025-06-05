@@ -76,7 +76,7 @@ var (
 	TestGenesisHash       = common.HexToHash("0x6116de25352c93149542e950162c7305f207bbc17b0eb725136b78c80aed79cc")
 	BSCGenesisHash        = common.HexToHash("0x0d21840abff46b96c84b2ac9e10e4f5cdaeb5693cb665db62a2f3b02d2d57b5b")
 	ChapelGenesisHash     = common.HexToHash("0x6d3c66c5357ec91d5c43af47e234a939b22557cbb552dc45bebbceeed90fbe34")
-	RialtoGenesisHash     = common.HexToHash("0x2edfc1f8e0c2452ea835a9a1585b72068c0ec4443c6785fd42ca0fddbef3abe0")
+	RialtoGenesisHash     = common.HexToHash("0x783196e5ae379b22b250bb43022665e45ababa247150feb67baa927e37f5666a")
 )
 
 var (

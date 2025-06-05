@@ -23,8 +23,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/erigontech/erigon-lib/chain/snapcfg"
-	"github.com/erigontech/erigon/execution/consensus"
 	"io"
 	"io/fs"
 	"os"
@@ -36,6 +34,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/erigontech/erigon-lib/chain/snapcfg"
+	"github.com/erigontech/erigon/execution/consensus"
 
 	"github.com/anacrolix/torrent"
 	"golang.org/x/sync/errgroup"
