@@ -1122,7 +1122,6 @@ func PruneTable(tx kv.RwTx, table string, pruneTo uint64, ctx context.Context, l
 			logger.Info(fmt.Sprintf("[%s] pruning table periodic progress", logPrefix), "table", table, "blockNum", blockNum)
 		default:
 		}
-		logger.Info(fmt.Sprintf("[%s] pruning table periodic progress", logPrefix), "table", table, "blockNum", blockNum)
 
 		if err = c.DeleteCurrent(); err != nil {
 			return fmt.Errorf("failed to remove for block %d: %w", blockNum, err)
@@ -1134,6 +1133,7 @@ func PruneTable(tx kv.RwTx, table string, pruneTo uint64, ctx context.Context, l
 			default:
 			}
 			if time.Since(t) > timeout {
+				logger.Info(fmt.Sprintf("[%s] pruning table timeout", logPrefix), "table", table, "blockNum", blockNum)
 				break
 			}
 		}
