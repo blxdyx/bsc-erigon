@@ -226,7 +226,6 @@ func (rw *HistoricalTraceWorker) RunTxTaskNoLock(txTask *state.TxTask) {
 			ibs.SetTxContext(txTask.TxIndex, txTask.BlockNum)
 			msg := txTask.TxAsMessage
 			if rw.execArgs.ChainConfig.IsCancun(header.Number.Uint64(), header.Time) {
-				rules := rw.execArgs.ChainConfig.Rules(header.Number.Uint64(), header.Time)
 				ibs.Prepare(rules, msg.From(), txTask.EvmBlockContext.Coinbase, msg.To(), vm.ActivePrecompiles(rules), msg.AccessList(), nil)
 			}
 			txContext := core.NewEVMTxContext(msg)

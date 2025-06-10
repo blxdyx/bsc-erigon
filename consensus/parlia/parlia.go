@@ -1422,7 +1422,7 @@ func (p *Parlia) initContract(state *state.IntraBlockState, header *types.Header
 		return false, err
 	}
 	for _, c := range contracts {
-		// p.logger.Info("Init contracts", "len(systemTxs)", len(*systemTxs), "len(txs)", len(*txs))
+		p.logger.Info("Init contracts", "len(systemTxs)", len(*systemTxs), "len(txs)", len(*txs), "*curIndex", *curIndex, "*txIndex", *txIndex)
 		if *curIndex == *txIndex {
 			return p.applyTransaction(header.Coinbase, c, u256.Num0, data, state, header, txs, receipts, systemTxs, usedGas, mining, systemTxCall, curIndex)
 		}
