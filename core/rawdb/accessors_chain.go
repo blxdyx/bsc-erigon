@@ -1109,6 +1109,7 @@ func PruneTable(tx kv.RwTx, table string, pruneTo uint64, ctx context.Context, l
 		}
 		i++
 		if i > limit {
+			logger.Info(fmt.Sprintf("[%s] pruning table timeout", logPrefix), "table", table, "limit", limit)
 			break
 		}
 
