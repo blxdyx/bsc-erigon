@@ -419,7 +419,7 @@ func processResultQueueHistorical(consumer TraceConsumer, rws *state.ResultsQueu
 			applyWorker.RunTxTaskNoLock(txTask.Reset())
 		}
 		if txTask.Error != nil {
-			return outputTxNum, false, txTask.Error
+			return outputTxNum, false, fmt.Errorf("failed to reduce transaction: %w, tx.Index = %d,  blockNum = %d", txTask.Error, txTask.TxIndex, txTask.BlockNum)
 		}
 
 		txTask.CreateReceipt(tx)
