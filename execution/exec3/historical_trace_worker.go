@@ -194,7 +194,7 @@ func (rw *HistoricalTraceWorker) RunTxTaskNoLock(txTask *state.TxTask) {
 			break
 		}
 
-		if _, isPoSa := rw.execArgs.Engine.(consensus.PoSA); isPoSa {
+		if isPoSA {
 			// Is an empty block
 			if rw.execArgs.ChainConfig.IsFeynman(header.Number.Uint64(), header.Time) && txTask.TxIndex == 0 {
 				systemcontracts.UpgradeBuildInSystemContract(rw.execArgs.ChainConfig, header.Number, txTask.LastBlockTime, header.Time, ibs, rw.logger)
