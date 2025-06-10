@@ -419,7 +419,7 @@ func processResultQueueHistorical(consumer TraceConsumer, rws *state.ResultsQueu
 			applyWorker.RunTxTaskNoLock(txTask.Reset())
 		}
 		if txTask.Error != nil {
-			log.Info("processResultQueueHistorical", "tx.Index", txTask.TxIndex, "txTask.BlockNum", "err", txTask.Error)
+			log.Info("processResultQueueHistorical", "tx.Index", txTask.TxIndex, "txTask.BlockNum", txTask.BlockNum, "err", txTask.Error)
 			return outputTxNum, false, txTask.Error
 		}
 
