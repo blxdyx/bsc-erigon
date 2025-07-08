@@ -673,6 +673,8 @@ Loop:
 			offsetFromBlockBeginning = 0
 		}
 
+		logger.Info("Execute", "time", time.Since(start))
+
 		// MA commitTx
 		if !parallel {
 			select {
