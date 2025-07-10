@@ -171,6 +171,7 @@ github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/bits-and-blooms/bitset v1.12.0 h1:U/q1fAF7xXRhFCrhROzIfffYnu+dlS38vCZtmFVPHmA=
 github.com/bits-and-blooms/bitset v1.12.0/go.mod h1:7hO7Gc7Pp1vODcmWvKMRA9BNmbv6a/7QIWpPxHddWR8=
+github.com/blxdyx/bsc-erigon-snapshot v0.0.0-20250710075607-02f36daaaefc/go.mod h1:ooHlCl+eEYzebiPu+FP6Q6SpPUeMADn8Jxabv3IKb9M=
 github.com/bnb-chain/greenfield-cometbft v1.3.1 h1:LhcBwhj/UhcfZXUnefwp+hiqpEYwloUO5KGJB3Xrqt4=
 github.com/bnb-chain/greenfield-cometbft v1.3.1/go.mod h1:4YtK3qVOhmL/evCCZ2qohjhuQLSjGcz2yYW62ALk/N0=
 github.com/bnb-chain/ics23 v0.1.0 h1:DvjGOts2FBfbxB48384CYD1LbcrfjThFz8kowY/7KxU=
