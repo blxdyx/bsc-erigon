@@ -251,15 +251,23 @@ func LoadSnapshotsHashes(ctx context.Context, dirs datadir.Dirs, chainName strin
 	if err != nil {
 		return nil, err
 	}
+
+	log.Root().Info("[LoadSnapshotsHashes] Checking local cache", "path", preverifiedPath, "exists", exists, "chain", chainName)
+
 	if exists {
 		// Load hashes from local preverified.toml
+		log.Root().Info("[LoadSnapshotsHashes] Using local cache", "chain", chainName)
 		haveToml, err := os.ReadFile(preverifiedPath)
 		if err != nil {
 			return nil, err
 		}
+		if chainName == networkname.Chapel {
+			log.Root().Info("[Chapel] Loaded from local cache", "data_size", len(haveToml), "sample", string(haveToml[:min(200, len(haveToml))]))
+		}
 		snapcfg.SetToml(chainName, haveToml)
 	} else {
 		// Fetch the snapshot hashes from the web
+		log.Root().Info("[LoadSnapshotsHashes] No local cache, fetching from remote", "chain", chainName)
 		fetched, err := snapcfg.LoadRemotePreverified(ctx)
 		log.Root().Info("Snapshot hashes fetched", "fetched", fetched, "err", err, "chain", chainName)
 		if err != nil {
@@ -270,11 +278,22 @@ func LoadSnapshotsHashes(ctx context.Context, dirs datadir.Dirs, chainName strin
 			log.Root().Crit("Snapshot hashes for supported networks was not loaded. Please check your network connection and/or GitHub status here https://www.githubstatus.com/", "chain", chainName)
 			return nil, fmt.Errorf("remote snapshot hashes was not fetched for chain %s", chainName)
 		}
-		if err := dir.WriteFileWithFsync(preverifiedPath, snapcfg.GetToml(chainName), 0644); err != nil {
+
+		// Save to local cache
+		tomlData := snapcfg.GetToml(chainName)
+		if chainName == networkname.Chapel {
+			log.Root().Info("[Chapel] Saving to local cache", "data_size", len(tomlData), "path", preverifiedPath)
+		}
+		if err := dir.WriteFileWithFsync(preverifiedPath, tomlData, 0644); err != nil {
 			return nil, err
 		}
 	}
-	return snapcfg.KnownCfg(chainName), nil
+
+	cfg := snapcfg.KnownCfg(chainName)
+	if chainName == networkname.Chapel {
+		log.Root().Info("[Chapel] Final config", "preverified_count", len(cfg.Preverified), "expect_blocks", cfg.ExpectBlocks)
+	}
+	return cfg, nil
 }
 
 func getIpv6Enabled() bool {

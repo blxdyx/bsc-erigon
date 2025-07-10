@@ -579,10 +579,14 @@ func LoadRemotePreverified(ctx context.Context) (loaded bool, err error) {
 
 		// Fallback to github if R2 fails
 		loaded, err = snapshothashes.LoadSnapshots(ctx, snapshothashes.Github, snapshotGitBranch)
+		log.Root().Info("Loaded snapshot hashes from GitHub", "loaded", loaded, "err", err)
 		if err != nil {
 			return false, err
 		}
 	}
+
+	// Log Chapel data information before updating
+	log.Root().Info("[Chapel] Before update", "data_size", len(snapshothashes.Chapel), "sample", string(snapshothashes.Chapel[:min(200, len(snapshothashes.Chapel))]))
 
 	// Re-load the preverified hashes
 	Mainnet = fromToml(snapshothashes.Mainnet)
@@ -593,6 +597,22 @@ func LoadRemotePreverified(ctx context.Context) (loaded bool, err error) {
 	Chiado = fromToml(snapshothashes.Chiado)
 	Bsc = fromToml(snapshothashes.Bsc)
 	Chapel = fromToml(snapshothashes.Chapel)
+
+	// Log Chapel data information after updating
+	log.Root().Info("[Chapel] After update", "data_size", len(snapshothashes.Chapel), "sample", string(snapshothashes.Chapel[:min(200, len(snapshothashes.Chapel))]))
+	log.Root().Info("[Chapel] Parsed entries count", "count", len(Chapel))
+
+	// Log first few entries for verification
+	if len(Chapel) > 0 {
+		log.Root().Info("[Chapel] First entry", "name", Chapel[0].Name, "hash", Chapel[0].Hash)
+	}
+	if len(Chapel) > 1 {
+		log.Root().Info("[Chapel] Second entry", "name", Chapel[1].Name, "hash", Chapel[1].Hash)
+	}
+	if len(Chapel) >= 5 {
+		log.Root().Info("[Chapel] Last entry", "name", Chapel[len(Chapel)-1].Name, "hash", Chapel[len(Chapel)-1].Hash)
+	}
+
 	// Update the known preverified hashes
 	KnownWebseeds = map[string][]string{
 		networkname.Mainnet:    webseedsParse(webseed.Mainnet),
@@ -616,6 +636,8 @@ func LoadRemotePreverified(ctx context.Context) (loaded bool, err error) {
 		networkname.BSC:        Bsc,
 		networkname.Chapel:     Chapel,
 	}
+
+	log.Root().Info("[Chapel] Final verification", "known_entries", len(knownPreverified[networkname.Chapel]))
 	return loaded, nil
 }
 
