@@ -573,6 +573,7 @@ func webseedsParse(in []byte) (res []string) {
 
 func LoadRemotePreverified(ctx context.Context) (loaded bool, err error) {
 	loaded, err = snapshothashes.LoadSnapshots(ctx, snapshothashes.R2, snapshotGitBranch)
+	log.Root().Info("Loaded snapshot hashes from R2", "loaded", loaded, "err", err)
 	if err != nil {
 		log.Root().Warn("Failed to load snapshot hashes from R2; falling back to GitHub", "err", err)
 
