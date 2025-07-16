@@ -1638,7 +1638,7 @@ func (r *BlockReader) ReadBlobByNumber(ctx context.Context, tx kv.Getter, blockH
 		}
 		return r.bs.ReadBlobSidecars(ctx, blockHeight, blockHash)
 	}
-	log.Info("Read BlobSidecar from snapshots", blockHeight, "maxBlobInFiles", maxBlobInFiles)
+	log.Info("Read BlobSidecar from snapshots", "blockHeight", blockHeight, "maxBlobInFiles", maxBlobInFiles)
 	blobs, err := r.bscSn.ReadBlobSidecars(blockHeight)
 	if err != nil {
 		return nil, false, err
