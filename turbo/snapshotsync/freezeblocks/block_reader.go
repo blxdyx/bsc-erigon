@@ -1631,6 +1631,7 @@ func (r *BlockReader) LastFrozenCheckpointId() uint64 {
 func (r *BlockReader) ReadBlobByNumber(ctx context.Context, tx kv.Getter, blockHeight uint64) ([]*types.BlobSidecar, bool, error) {
 	maxBlobInFiles := r.FrozenBscBlobs()
 	if blockHeight > maxBlobInFiles || maxBlobInFiles == 0 {
+		log.Info("ReadBlobByNumber", "blockHeight", blockHeight, "maxBlobInFiles", maxBlobInFiles)
 		blockHash, _, err := r.CanonicalHash(ctx, tx, blockHeight)
 		if err != nil {
 			return nil, false, fmt.Errorf("failed ReadCanonicalHash: %w", err)
