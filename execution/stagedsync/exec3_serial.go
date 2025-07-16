@@ -121,6 +121,7 @@ func (se *serialExecutor) execute(ctx context.Context, tasks []*state.TxTask, gp
 					logIndexAfterTx = receipt.FirstLogIndexWithinBlock + uint32(len(txTask.Logs))
 					cumGasUsed = receipt.CumulativeGasUsed
 				}
+				log.Info("Bad block receipts", "txTask.TxIndex", txTask.TxIndex, "cumGasUsed", cumGasUsed)
 			}
 		} else {
 			if se.cfg.chainConfig.Bor != nil && txTask.TxIndex >= 1 {
