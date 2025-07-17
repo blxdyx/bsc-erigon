@@ -123,7 +123,7 @@ func New(stateReader StateReader) *IntraBlockState {
 		transientStorage:  newTransientStorage(),
 		balanceInc:        map[common.Address]*BalanceIncrease{},
 		txIndex:           0,
-		trace:             true,
+		trace:             false,
 		dep:               -1,
 	}
 }
