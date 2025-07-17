@@ -502,6 +502,10 @@ func (st *StateTransition) TransitionDb(refunds bool, gasBailout bool) (result *
 
 	// set code tx
 	auths := msg.Authorizations()
+	verifiedAuthorities, err := st.verifyAuthorities(auths, contractCreation, rules.ChainID.String())
+	if err != nil {
+		return nil, err
+	}
 
 	if rules.IsNano {
 		for _, blackListAddr := range types.NanoBlackList {
@@ -521,11 +525,6 @@ func (st *StateTransition) TransitionDb(refunds bool, gasBailout bool) (result *
 	}
 	if st.gasRemaining < gas || st.gasRemaining < floorGas7623 {
 		return nil, fmt.Errorf("%w: have %d, want %d", ErrIntrinsicGas, st.gasRemaining, max(gas, floorGas7623))
-	}
-
-	verifiedAuthorities, err := st.verifyAuthorities(auths, contractCreation, rules.ChainID.String())
-	if err != nil {
-		return nil, err
 	}
 
 	if t := st.evm.Config().Tracer; t != nil && t.OnGasChange != nil {
