@@ -20,6 +20,7 @@ import (
 	"github.com/erigontech/erigon-lib/seg"
 	"github.com/erigontech/erigon/turbo/debug"
 	"github.com/spf13/cobra"
+	"path/filepath"
 )
 
 // TODO: this utility can be safely deleted after PR https://github.com/erigontech/erigon/pull/12907/ is rolled out in production
@@ -120,14 +121,14 @@ var idxOptimize = &cobra.Command{
 
 			tmpDir := dirs.Tmp
 
-			idxInput, err := seg.NewDecompressor(dirs.SnapIdx + file.Name())
+			idxInput, err := seg.NewDecompressor(filepath.Join(dirs.SnapIdx, file.Name()))
 			if err != nil {
 				logger.Error("Failed to open decompressor", "error", err)
 				return
 			}
 			defer idxInput.Close()
 
-			idxOutput, err := seg.NewCompressor(ctx, "optimizoor", dirs.SnapIdx+file.Name()+".new", tmpDir, seg.DefaultCfg, log.LvlInfo, logger)
+			idxOutput, err := seg.NewCompressor(ctx, "optimizoor", filepath.Join(dirs.SnapIdx, file.Name()+".new"), tmpDir, seg.DefaultCfg, log.LvlInfo, logger)
 			if err != nil {
 				logger.Error("Failed to open compressor", "error", err)
 				return
@@ -183,7 +184,7 @@ var idxOptimize = &cobra.Command{
 				logger.Error("Failed to build accessor", "error", err)
 				return
 			}
-			idxPath := dirs.SnapAccessors + file.Name() + "i.new"
+			idxPath := filepath.Join(dirs.SnapAccessors, file.Name()+"i.new")
 			cfg := recsplit.RecSplitArgs{
 				Version:            1,
 				Enums:              true,
@@ -196,7 +197,7 @@ var idxOptimize = &cobra.Command{
 				Salt:       salt,
 				NoFsync:    false,
 			}
-			data, err := seg.NewDecompressor(dirs.SnapIdx + file.Name() + ".new")
+			data, err := seg.NewDecompressor(filepath.Join(dirs.SnapIdx, file.Name()+".new"))
 			if err != nil {
 				logger.Error("Failed to build accessor", "error", err)
 				return
