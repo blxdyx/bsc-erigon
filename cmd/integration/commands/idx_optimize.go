@@ -105,14 +105,25 @@ var idxOptimize = &cobra.Command{
 
 		logger.Info("Optimizing idx files...")
 		cOpt := 0
+		skipped := 0
 		for _, file := range files {
 			if file.IsDir() || !strings.HasSuffix(file.Name(), ".ef") {
 				continue
 			}
 
+			// Check if file has already been optimized and skip if requested
+			if _, err := os.Stat(filepath.Join(dirs.SnapIdx, file.Name()+".new")); err == nil {
+				if _, err := os.Stat(filepath.Join(dirs.SnapAccessors, file.Name()+"i.new")); err == nil {
+					logger.Info("Skipping already optimized file", "file", file.Name())
+					skipped++
+					continue
+				}
+			}
+
 			efInfo, err := parseEFFilename(file.Name())
 			if err != nil {
 				logger.Error("Failed to parse file info: ", err)
+				continue
 			}
 			logger.Info("Optimizing...", "file", file.Name(), "n", cOpt, "total", cEF)
 
