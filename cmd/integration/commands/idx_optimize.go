@@ -113,11 +113,9 @@ var idxOptimize = &cobra.Command{
 
 			// Check if file has already been optimized and skip if requested
 			if _, err := os.Stat(filepath.Join(dirs.SnapIdx, file.Name()+".new")); err == nil {
-				if _, err := os.Stat(filepath.Join(dirs.SnapAccessors, file.Name()+"i.new")); err == nil {
-					logger.Info("Skipping already optimized file", "file", file.Name())
-					skipped++
-					continue
-				}
+				logger.Info("Skipping already optimized file", "file", file.Name())
+				skipped++
+				continue
 			}
 
 			efInfo, err := parseEFFilename(file.Name())
