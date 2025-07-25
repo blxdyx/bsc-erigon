@@ -152,6 +152,9 @@ var idxOptimize = &cobra.Command{
 			writer := seg.NewWriter(idxOutput, seg.CompressNone)
 			ps := background.NewProgressSet()
 
+			logger.Info("Starting data processing", "file", file.Name())
+			processedItems := 0
+
 			for reader.HasNext() {
 				k, _ := reader.Next(nil)
 				if !reader.HasNext() {
@@ -173,12 +176,20 @@ var idxOptimize = &cobra.Command{
 					return
 				}
 
+				processedItems++
+				// Log progress every 10000 items
+				if processedItems%10000 == 0 {
+					logger.Info("Processing progress", "file", file.Name(), "items", processedItems)
+				}
+
 				select {
 				case <-ctx.Done():
 					return
 				default:
 				}
 			}
+
+			logger.Info("Data processing completed", "file", file.Name(), "total_items", processedItems)
 			if err := writer.Compress(); err != nil {
 				logger.Error("error while writing optimized file", "error", err)
 				return
@@ -187,13 +198,20 @@ var idxOptimize = &cobra.Command{
 			writer.Close()
 			idxOutput.Close()
 
+			logger.Info("Optimization completed, starting index rebuild", "file", file.Name())
+
 			// rebuid .efi; COPIED FROM InvertedIndex.buildMapAccessor
+			logger.Info("Getting salt for index generation", "file", file.Name())
 			salt, err := state.GetStateIndicesSalt(dirs, false, logger)
 			if err != nil {
 				logger.Error("Failed to build accessor", "error", err)
 				return
 			}
+			logger.Info("Salt obtained successfully", "file", file.Name())
+
 			idxPath := filepath.Join(dirs.SnapAccessors, file.Name()+"i.new")
+			logger.Info("Building hash map accessor", "file", file.Name(), "output", idxPath)
+
 			cfg := recsplit.RecSplitArgs{
 				Version:            1,
 				Enums:              true,
@@ -206,14 +224,39 @@ var idxOptimize = &cobra.Command{
 				Salt:       salt,
 				NoFsync:    false,
 			}
+
+			logger.Info("Opening optimized file for index generation", "file", file.Name()+".new")
 			data, err := seg.NewDecompressor(filepath.Join(dirs.SnapIdx, file.Name()+".new"))
 			if err != nil {
 				logger.Error("Failed to build accessor", "error", err)
 				return
 			}
+
+			logger.Info("Starting hash map accessor build", "file", file.Name())
 			if err := state.BuildHashMapAccessor(ctx, seg.NewReader(data.MakeGetter(), seg.CompressNone), idxPath, false, cfg, ps, logger); err != nil {
 				logger.Error("Failed to build accessor", "error", err)
 				return
+			}
+			data.Close()
+
+			// Log file sizes for comparison
+			if originalInfo, err := os.Stat(filepath.Join(dirs.SnapIdx, file.Name())); err == nil {
+				if newInfo, err := os.Stat(filepath.Join(dirs.SnapIdx, file.Name()+".new")); err == nil {
+					originalSize := originalInfo.Size()
+					newSize := newInfo.Size()
+					compressionRatio := float64(newSize) / float64(originalSize) * 100
+					logger.Info("File optimization completed",
+						"file", file.Name(),
+						"original_size", originalSize,
+						"new_size", newSize,
+						"compression_ratio", fmt.Sprintf("%.2f%%", compressionRatio))
+				}
+			}
+
+			if accessorInfo, err := os.Stat(idxPath); err == nil {
+				logger.Info("Index file generated",
+					"file", file.Name()+"i.new",
+					"size", accessorInfo.Size())
 			}
 		}
 
