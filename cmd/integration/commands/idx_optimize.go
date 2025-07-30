@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/erigontech/erigon-lib/common/background"
 	"github.com/erigontech/erigon-lib/common/datadir"
@@ -247,10 +248,14 @@ var idxOptimize = &cobra.Command{
 			}
 
 			logger.Info("Starting hash map accessor build", "file", file.Name())
+			buildStart := time.Now()
 			if err := state.BuildHashMapAccessor(ctx, seg.NewReader(data.MakeGetter(), seg.CompressNone), idxPath, false, cfg, ps, logger); err != nil {
 				logger.Error("Failed to build accessor", "error", err)
+				data.Close()
 				return
 			}
+			buildDuration := time.Since(buildStart)
+			logger.Info("Hash map accessor build completed", "file", file.Name(), "duration", buildDuration)
 			data.Close()
 
 			// Log file sizes for comparison
@@ -268,9 +273,15 @@ var idxOptimize = &cobra.Command{
 			}
 
 			if accessorInfo, err := os.Stat(idxPath); err == nil {
-				logger.Info("Index file generated",
+				logger.Info("Index file generated successfully",
 					"file", file.Name()+"i.new",
-					"size", accessorInfo.Size())
+					"size", accessorInfo.Size(),
+					"path", idxPath)
+			} else {
+				logger.Error("Index file was not created",
+					"file", file.Name()+"i.new",
+					"expected_path", idxPath,
+					"error", err)
 			}
 		}
 
