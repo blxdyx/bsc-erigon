@@ -16,18 +16,29 @@ import (
 	"github.com/erigontech/erigon-lib/recsplit/multiencseq"
 	"github.com/erigontech/erigon-lib/state"
 
+	"path/filepath"
+
 	"github.com/erigontech/erigon-lib/common"
 	"github.com/erigontech/erigon-lib/seg"
 	"github.com/erigontech/erigon/turbo/debug"
 	"github.com/spf13/cobra"
-	"path/filepath"
 )
 
 // TODO: this utility can be safely deleted after PR https://github.com/erigontech/erigon/pull/12907/ is rolled out in production
 func parseEFFilename(fileName string) (*efFileInfo, error) {
+	// Handle new format: v1.0-code.0-64.ef
 	partsByDot := strings.Split(fileName, ".")
-	partsByDash := strings.Split(fileName, "-")
-	stepParts := strings.Split(partsByDot[2], "-")
+	if len(partsByDot) < 4 {
+		return nil, fmt.Errorf("invalid filename format: %s", fileName)
+	}
+
+	// Step range is in the second-to-last part (before .ef)
+	stepRangePart := partsByDot[len(partsByDot)-2] // "0-64"
+	stepParts := strings.Split(stepRangePart, "-")
+	if len(stepParts) != 2 {
+		return nil, fmt.Errorf("invalid step range: %s", stepRangePart)
+	}
+
 	startStep, err := strconv.ParseUint(stepParts[0], 10, 64)
 	if err != nil {
 		return nil, err
@@ -37,8 +48,11 @@ func parseEFFilename(fileName string) (*efFileInfo, error) {
 		return nil, err
 	}
 
+	// Prefix is everything before the step range
+	prefix := strings.Join(partsByDot[:len(partsByDot)-2], ".")
+
 	return &efFileInfo{
-		prefix:    partsByDash[0],
+		prefix:    prefix,
 		stepSize:  endStep - startStep,
 		startStep: startStep,
 		endStep:   endStep,
