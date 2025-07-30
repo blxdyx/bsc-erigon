@@ -138,7 +138,15 @@ var idxOptimize = &cobra.Command{
 				logger.Error("Failed to parse file info: ", err)
 				continue
 			}
-			logger.Info("Optimizing...", "file", file.Name(), "n", cOpt, "total", cEF)
+
+			logger.Info("Parsed file info",
+				"file", file.Name(),
+				"prefix", efInfo.prefix,
+				"startStep", efInfo.startStep,
+				"endStep", efInfo.endStep,
+				"stepSize", efInfo.stepSize)
+
+			logger.Info("Optimizing...", "file", file.Name(), "n", cOpt, "total", cEF-skipped)
 
 			cOpt++
 			baseTxNum := efInfo.startStep * config3.DefaultStepSize
