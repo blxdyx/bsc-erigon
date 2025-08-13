@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/erigontech/erigon-lib/log/v3"
 	"github.com/erigontech/erigon/eth/consensuschain"
 
@@ -315,6 +316,9 @@ func (api *TraceAPIImpl) Filter(ctx context.Context, req TraceFilterRequest, gas
 	}
 	defer dbtx.Rollback()
 
+	// Debug logging for easier diagnosis in case of empty responses
+	logger := log.New("trace_filtering")
+
 	var fromBlock uint64
 	var toBlock uint64
 	if req.FromBlock == nil {
@@ -335,6 +339,26 @@ func (api *TraceAPIImpl) Filter(ctx context.Context, req TraceFilterRequest, gas
 	if fromBlock > toBlock {
 		return errors.New("invalid parameters: fromBlock cannot be greater than toBlock")
 	}
+
+	logger.Debug("trace_filter request",
+		"fromBlock", fromBlock,
+		"toBlock", toBlock,
+		"fromAddrCnt", len(req.FromAddress),
+		"toAddrCnt", len(req.ToAddress),
+		"mode", req.Mode,
+		"after", func() interface{} {
+			if req.After != nil {
+				return *req.After
+			}
+			return nil
+		}(),
+		"count", func() interface{} {
+			if req.Count != nil {
+				return *req.Count
+			}
+			return nil
+		}(),
+	)
 
 	return api.filterV3(ctx, dbtx, fromBlock, toBlock, req, stream, *gasBailOut, traceConfig)
 }
@@ -360,6 +384,13 @@ func (api *TraceAPIImpl) filterV3(ctx context.Context, dbtx kv.TemporalTx, fromB
 	}
 	it := rawdbv3.TxNums2BlockNums(dbtx, api._txNumReader, allTxs, order.Asc)
 	defer it.Close()
+
+	logger := log.New("trace_filtering")
+	logger.Debug("trace_filter bounds",
+		"fromBlock", fromBlock, "toBlock", toBlock,
+		"fromTxNum", fromTxNum, "toTxNum", toTxNum,
+		"fromAddrCnt", len(fromAddresses), "toAddrCnt", len(toAddresses),
+	)
 
 	chainConfig, err := api.chainConfig(ctx, dbtx)
 	if err != nil {
@@ -394,6 +425,11 @@ func (api *TraceAPIImpl) filterV3(ctx context.Context, dbtx kv.TemporalTx, fromB
 	stateReader.SetTx(dbtx)
 	noop := state.NewNoopWriter()
 	isPos := false
+	if !it.HasNext() {
+		logger.Debug("trace_filter: no candidate txs from indexes/range",
+			"includeAll", includeAll,
+		)
+	}
 	for it.HasNext() {
 		txNum, blockNum, txIndex, isFnalTxn, blockNumChanged, err := it.Next()
 		if err != nil {
@@ -678,6 +714,11 @@ func (api *TraceAPIImpl) filterV3(ctx context.Context, dbtx kv.TemporalTx, fromB
 			}
 		}
 	}
+
+	// close JSON array later in function; but log summary here using defer
+	defer func() {
+		logger.Debug("trace_filter summary", "seen", nSeen, "exported", nExported, "includeAll", includeAll)
+	}()
 	stream.WriteArrayEnd()
 	return stream.Flush()
 }
