@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/erigontech/erigon/turbo/snapshotsync/freezeblocks"
 
 	"github.com/erigontech/erigon-lib/log/v3"
 	"github.com/erigontech/erigon/eth/consensuschain"
@@ -367,6 +368,8 @@ func (api *TraceAPIImpl) filterV3(ctx context.Context, dbtx kv.TemporalTx, fromB
 	var fromTxNum, toTxNum uint64
 	var err error
 
+	txNumsReader := rawdbv3.TxNums.WithCustomReadTxNumFunc(freezeblocks.TxBlockIndexFromBlockReader(ctx, api._blockReader))
+
 	if fromBlock > 0 {
 		fromTxNum, err = api._txNumReader.Min(dbtx, fromBlock)
 		if err != nil {
@@ -382,7 +385,7 @@ func (api *TraceAPIImpl) filterV3(ctx context.Context, dbtx kv.TemporalTx, fromB
 	if err != nil {
 		return err
 	}
-	it := rawdbv3.TxNums2BlockNums(dbtx, api._txNumReader, allTxs, order.Asc)
+	it := rawdbv3.TxNums2BlockNums(dbtx, txNumsReader, allTxs, order.Asc)
 	defer it.Close()
 
 	logger := log.New("trace_filtering")
