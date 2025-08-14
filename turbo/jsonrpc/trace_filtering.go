@@ -263,7 +263,7 @@ func traceFilterBitmapsV3(tx kv.TemporalTx, req TraceFilterRequest, from, to uin
 
 	for _, addr := range req.FromAddress {
 		if addr != nil {
-			logger.Debug("trace_filter index query", "idx", "from", "addr", addr.Hex(), "fromBlock", from, "toBlock", to)
+			logger.Debug("trace_filter index query", "idx", "from", "addr", addr.Hex(), "fromTxNum", from, "toTxNum", to)
 			it, err := tx.IndexRange(kv.TracesFromIdx, addr.Bytes(), int(from), int(to), order.Asc, kv.Unlim)
 			if errors.Is(err, ethdb.ErrKeyNotFound) {
 				logger.Debug("trace_filter index key not found", "idx", "from", "addr", addr.Hex())
@@ -273,6 +273,10 @@ func traceFilterBitmapsV3(tx kv.TemporalTx, req TraceFilterRequest, from, to uin
 				logger.Error("trace_filter index range error", "idx", "from", "addr", addr.Hex(), "err", err)
 				return nil, nil, nil, err
 			}
+			if !it.HasNext() {
+				logger.Debug("trace_filter index empty in range", "idx", "from", "addr", addr.Hex(), "fromTxNum", from, "toTxNum", to)
+				continue
+			}
 			allBlocks = stream.Union[uint64](allBlocks, it, order.Asc, -1)
 			fromAddresses[*addr] = struct{}{}
 		}
@@ -280,7 +284,7 @@ func traceFilterBitmapsV3(tx kv.TemporalTx, req TraceFilterRequest, from, to uin
 
 	for _, addr := range req.ToAddress {
 		if addr != nil {
-			logger.Debug("trace_filter index query", "idx", "to", "addr", addr.Hex(), "fromBlock", from, "toBlock", to)
+			logger.Debug("trace_filter index query", "idx", "to", "addr", addr.Hex(), "fromTxNum", from, "toTxNum", to)
 			it, err := tx.IndexRange(kv.TracesToIdx, addr.Bytes(), int(from), int(to), order.Asc, kv.Unlim)
 			if errors.Is(err, ethdb.ErrKeyNotFound) {
 				logger.Debug("trace_filter index key not found", "idx", "to", "addr", addr.Hex())
@@ -289,6 +293,10 @@ func traceFilterBitmapsV3(tx kv.TemporalTx, req TraceFilterRequest, from, to uin
 			if err != nil {
 				logger.Error("trace_filter index range error", "idx", "to", "addr", addr.Hex(), "err", err)
 				return nil, nil, nil, err
+			}
+			if !it.HasNext() {
+				logger.Debug("trace_filter index empty in range", "idx", "to", "addr", addr.Hex(), "fromTxNum", from, "toTxNum", to)
+				continue
 			}
 			blocksTo = stream.Union[uint64](blocksTo, it, order.Asc, -1)
 			toAddresses[*addr] = struct{}{}
