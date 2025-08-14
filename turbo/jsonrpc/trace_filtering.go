@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/erigontech/erigon/turbo/snapshotsync/freezeblocks"
 
 	"github.com/erigontech/erigon-lib/log/v3"
 	"github.com/erigontech/erigon/eth/consensuschain"
@@ -260,12 +259,19 @@ func traceFilterBitmapsV3(tx kv.TemporalTx, req TraceFilterRequest, from, to uin
 	fromAddresses = make(map[common.Address]struct{}, len(req.FromAddress))
 	toAddresses = make(map[common.Address]struct{}, len(req.ToAddress))
 	var blocksTo stream.U64
+	logger := log.New("module", "trace_filtering")
 
 	for _, addr := range req.FromAddress {
 		if addr != nil {
+			logger.Debug("trace_filter index query", "idx", "from", "addr", addr.Hex(), "fromBlock", from, "toBlock", to)
 			it, err := tx.IndexRange(kv.TracesFromIdx, addr.Bytes(), int(from), int(to), order.Asc, kv.Unlim)
 			if errors.Is(err, ethdb.ErrKeyNotFound) {
+				logger.Debug("trace_filter index key not found", "idx", "from", "addr", addr.Hex())
 				continue
+			}
+			if err != nil {
+				logger.Error("trace_filter index range error", "idx", "from", "addr", addr.Hex(), "err", err)
+				return nil, nil, nil, err
 			}
 			allBlocks = stream.Union[uint64](allBlocks, it, order.Asc, -1)
 			fromAddresses[*addr] = struct{}{}
@@ -274,9 +280,15 @@ func traceFilterBitmapsV3(tx kv.TemporalTx, req TraceFilterRequest, from, to uin
 
 	for _, addr := range req.ToAddress {
 		if addr != nil {
+			logger.Debug("trace_filter index query", "idx", "to", "addr", addr.Hex(), "fromBlock", from, "toBlock", to)
 			it, err := tx.IndexRange(kv.TracesToIdx, addr.Bytes(), int(from), int(to), order.Asc, kv.Unlim)
 			if errors.Is(err, ethdb.ErrKeyNotFound) {
+				logger.Debug("trace_filter index key not found", "idx", "to", "addr", addr.Hex())
 				continue
+			}
+			if err != nil {
+				logger.Error("trace_filter index range error", "idx", "to", "addr", addr.Hex(), "err", err)
+				return nil, nil, nil, err
 			}
 			blocksTo = stream.Union[uint64](blocksTo, it, order.Asc, -1)
 			toAddresses[*addr] = struct{}{}
@@ -285,15 +297,18 @@ func traceFilterBitmapsV3(tx kv.TemporalTx, req TraceFilterRequest, from, to uin
 
 	switch req.Mode {
 	case TraceFilterModeIntersection:
+		logger.Debug("trace_filter index combine", "mode", "intersection", "fromAddrCnt", len(fromAddresses), "toAddrCnt", len(toAddresses))
 		allBlocks = stream.Intersect[uint64](allBlocks, blocksTo, -1)
 	case TraceFilterModeUnion:
 		fallthrough
 	default:
+		logger.Debug("trace_filter index combine", "mode", "union", "fromAddrCnt", len(fromAddresses), "toAddrCnt", len(toAddresses))
 		allBlocks = stream.Union[uint64](allBlocks, blocksTo, order.Asc, -1)
 	}
 
 	// Special case - if no addresses specified, take all traces
 	if len(req.FromAddress) == 0 && len(req.ToAddress) == 0 {
+		logger.Debug("trace_filter index includeAll range", "fromBlock", from, "toBlock", to)
 		allBlocks = stream.Range[uint64](from, to)
 		//} else {
 		//allBlocks.RemoveRange(0, from)
@@ -318,7 +333,7 @@ func (api *TraceAPIImpl) Filter(ctx context.Context, req TraceFilterRequest, gas
 	defer dbtx.Rollback()
 
 	// Debug logging for easier diagnosis in case of empty responses
-	logger := log.New("trace_filtering")
+	logger := log.New("module", "trace_filtering")
 
 	var fromBlock uint64
 	var toBlock uint64
@@ -368,8 +383,6 @@ func (api *TraceAPIImpl) filterV3(ctx context.Context, dbtx kv.TemporalTx, fromB
 	var fromTxNum, toTxNum uint64
 	var err error
 
-	txNumsReader := rawdbv3.TxNums.WithCustomReadTxNumFunc(freezeblocks.TxBlockIndexFromBlockReader(ctx, api._blockReader))
-
 	if fromBlock > 0 {
 		fromTxNum, err = api._txNumReader.Min(dbtx, fromBlock)
 		if err != nil {
@@ -385,10 +398,10 @@ func (api *TraceAPIImpl) filterV3(ctx context.Context, dbtx kv.TemporalTx, fromB
 	if err != nil {
 		return err
 	}
-	it := rawdbv3.TxNums2BlockNums(dbtx, txNumsReader, allTxs, order.Asc)
+	it := rawdbv3.TxNums2BlockNums(dbtx, api._txNumReader, allTxs, order.Asc)
 	defer it.Close()
 
-	logger := log.New("trace_filtering")
+	logger := log.New("module", "trace_filtering")
 	logger.Debug("trace_filter bounds",
 		"fromBlock", fromBlock, "toBlock", toBlock,
 		"fromTxNum", fromTxNum, "toTxNum", toTxNum,
@@ -819,7 +832,7 @@ func (api *TraceAPIImpl) callBlock(
 
 	engine := api.engine()
 	consensusHeaderReader := consensuschain.NewReader(cfg, dbtx, api._blockReader, nil)
-	logger := log.New("trace_filtering")
+	logger := log.New("module", "trace_filtering")
 	err = core.InitializeBlockExecution(engine.(consensus.Engine), consensusHeaderReader, block.HeaderNoCopy(), cfg, ibs, nil, logger, nil)
 	if err != nil {
 		return nil, nil, err
@@ -939,7 +952,7 @@ func (api *TraceAPIImpl) callTransaction(
 
 	engine := api.engine()
 	consensusHeaderReader := consensuschain.NewReader(cfg, dbtx, nil, nil)
-	logger := log.New("trace_filtering")
+	logger := log.New("module", "trace_filtering")
 	err = core.InitializeBlockExecution(engine.(consensus.Engine), consensusHeaderReader, header, cfg, ibs, nil, logger, nil)
 	if err != nil {
 		return nil, err
