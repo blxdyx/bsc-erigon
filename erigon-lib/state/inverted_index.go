@@ -774,7 +774,7 @@ func (ii *InvertedIndex) maxTxNumInDB(tx kv.Tx) uint64 {
 }
 
 func (iit *InvertedIndexRoTx) Progress(tx kv.Tx) uint64 {
-	return max(iit.files.EndTxNum(), iit.ii.maxTxNumInDB(tx))
+	return max(iit.files.EndTxNum())
 }
 
 func (iit *InvertedIndexRoTx) CanPrune(tx kv.Tx) bool {
