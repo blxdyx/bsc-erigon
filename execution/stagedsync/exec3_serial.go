@@ -60,6 +60,24 @@ func (se *serialExecutor) execute(ctx context.Context, tasks []*state.TxTask, gp
 				se.blobGasUsed += txTask.Tx.GetBlobGas()
 			}
 
+			// Debug gas logging for a specific block and normal txs
+			if txTask.BlockNum == 31103034 && !txTask.Final && txTask.TxIndex >= 0 && txTask.Tx != nil {
+				status := "success"
+				if txTask.Failed || txTask.Error != nil {
+					status = "failed"
+				}
+				se.logger.Info("exec gas",
+					"block", txTask.BlockNum,
+					"txIdx", txTask.TxIndex,
+					"hash", txTask.Tx.Hash(),
+					"gasUsed", txTask.GasUsed,
+					"cumGasUsed", se.gasUsed,
+					"logs", len(txTask.Logs),
+					"status", status,
+					"err", txTask.Error,
+				)
+			}
+
 			if txTask.Final {
 				if !se.isMining && !se.skipPostEvaluation && !se.execStage.CurrentSyncCycle.IsInitialCycle {
 					// note this assumes the bloach reciepts is a fixed array shared by
