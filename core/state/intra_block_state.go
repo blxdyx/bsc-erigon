@@ -1728,3 +1728,7 @@ func (sdb *IntraBlockState) ApplyVersionedWrites(writes VersionedWrites) error {
 	}
 	return nil
 }
+
+func (sdb *IntraBlockState) ClearAccessList() {
+	sdb.accessList = nil
+}
