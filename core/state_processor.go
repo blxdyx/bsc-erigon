@@ -21,12 +21,15 @@ package core
 
 import (
 	"github.com/erigontech/erigon-lib/common"
+	"github.com/erigontech/erigon-lib/log/v3"
 	"github.com/erigontech/erigon/core/state"
+	"github.com/erigontech/erigon/core/tracing"
 	"github.com/erigontech/erigon/core/vm"
 	"github.com/erigontech/erigon/core/vm/evmtypes"
 	"github.com/erigontech/erigon/execution/chain"
 	"github.com/erigontech/erigon/execution/consensus"
 	"github.com/erigontech/erigon/execution/types"
+	"github.com/holiman/uint256"
 )
 
 // applyTransaction attempts to apply a transaction to the given state database
@@ -80,6 +83,26 @@ func applyTransaction(config *chain.Config, engine consensus.EngineReader, gp *G
 		*usedBlobGas += txn.GetBlobGas()
 	}
 
+	// Temporary debug: print per-tx execution info for the problematic block
+	if header.Number.Uint64() == 31103034 {
+		status := "success"
+		if result.Failed() {
+			status = "failed"
+		}
+		log.Info("tx-exec",
+			"block", header.Number.Uint64(),
+			"txIdx", ibs.TxnIndex(),
+			"hash", txn.Hash(),
+			"gasUsed", result.GasUsed,
+			"evmRefund", result.EvmRefund,
+			"status", status,
+			"creation", msg.To() == nil,
+			"berlin", rules.IsBerlin,
+			"istanbul", rules.IsIstanbul,
+			"hertz", rules.IsHertz,
+		)
+	}
+
 	// Set the receipt logs and create the bloom filter.
 	// based on the eip phase, we're passing whether the root touch-delete accounts.
 	if !cfg.NoReceipts {
@@ -119,6 +142,37 @@ func ApplyTransaction(config *chain.Config, blockHashFunc func(n uint64) (common
 	// Add addresses to access list if applicable
 	// about the transaction and calling mechanisms.
 	cfg.SkipAnalysis = SkipAnalysis(config, header.Number.Uint64())
+
+	// Attach lightweight tracer for the problematic block to emit EVM-level logs
+	if header.Number.Uint64() == 31103034 {
+		hooks := &tracing.Hooks{}
+		hooks.OnTxStart = func(vmctx *tracing.VMContext, t types.Transaction, from common.Address) {
+			log.Info("evm tx start", "block", vmctx.BlockNumber, "tx", vmctx.TxHash, "from", from)
+		}
+		hooks.OnTxEnd = func(receipt *types.Receipt, err error) {
+			if receipt == nil {
+				log.Info("evm tx end", "err", err)
+				return
+			}
+			log.Info("evm tx end", "status", receipt.Status, "gasUsed", receipt.GasUsed, "cumGasUsed", receipt.CumulativeGasUsed, "err", err)
+		}
+		hooks.OnEnter = func(depth int, typ byte, from common.Address, to common.Address, precompile bool, input []byte, gas uint64, value *uint256.Int, code []byte) {
+			// avoid logging every opcode; only frame-level
+			log.Info("evm enter", "depth", depth, "type", typ, "from", from, "to", to, "precompile", precompile, "gas", gas, "input", len(input))
+		}
+		hooks.OnExit = func(depth int, output []byte, gasUsed uint64, err error, reverted bool) {
+			log.Info("evm exit", "depth", depth, "gasUsed", gasUsed, "reverted", reverted, "ret", len(output), "err", err)
+		}
+		hooks.OnGasChange = func(old, new uint64, reason tracing.GasChangeReason) {
+			// Log only tx-level and cold-access events to keep volume reasonable
+			switch reason {
+			case tracing.GasChangeTxIntrinsicGas, tracing.GasChangeTxRefunds, tracing.GasChangeTxLeftOverReturned, tracing.GasChangeCallStorageColdAccess:
+				log.Info("evm gas", "old", old, "new", new, "reason", reason)
+			default:
+			}
+		}
+		cfg.Tracer = hooks
+	}
 
 	blockContext := NewEVMBlockContext(header, blockHashFunc, engine, author, config)
 	vmenv := vm.NewEVM(blockContext, evmtypes.TxContext{}, ibs, config, cfg)

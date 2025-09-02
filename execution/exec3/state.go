@@ -45,6 +45,7 @@ import (
 	"github.com/erigontech/erigon/polygon/aa"
 	"github.com/erigontech/erigon/turbo/services"
 	"github.com/erigontech/erigon/turbo/shards"
+	"github.com/holiman/uint256"
 )
 
 var noop = state.NewNoopWriter()
@@ -312,6 +313,24 @@ func (rw *Worker) RunTxTaskNoLock(txTask *state.TxTask, isMining, skipPostEvalua
 			msg := txTask.TxAsMessage
 			if rw.chainConfig.IsCancun(header.Time) {
 				ibs.Prepare(rules, msg.From(), txTask.EvmBlockContext.Coinbase, msg.To(), vm.ActivePrecompiles(rules), msg.AccessList(), nil)
+			}
+			// Attach lightweight tracer for system tx on target block
+			if txTask.BlockNum == 31103034 {
+				hooks := &tracing.Hooks{}
+				hooks.OnEnter = func(depth int, typ byte, from common.Address, to common.Address, precompile bool, input []byte, gas uint64, value *uint256.Int, code []byte) {
+					log.Info("evm enter [exec3 systemTx]", "depth", depth, "type", typ, "from", from, "to", to, "precompile", precompile, "gas", gas, "input", len(input))
+				}
+				hooks.OnExit = func(depth int, output []byte, gasUsed uint64, err error, reverted bool) {
+					log.Info("evm exit [exec3 systemTx]", "depth", depth, "gasUsed", gasUsed, "reverted", reverted, "ret", len(output), "err", err)
+				}
+				hooks.OnGasChange = func(old, new uint64, reason tracing.GasChangeReason) {
+					switch reason {
+					case tracing.GasChangeCallStorageColdAccess, tracing.GasChangeCallOpCode:
+						log.Info("evm gas [exec3 systemTx]", "old", old, "new", new, "reason", reason)
+					default:
+					}
+				}
+				rw.vmCfg.Tracer = hooks
 			}
 			rw.evm.ResetBetweenBlocks(txTask.EvmBlockContext, core.NewEVMTxContext(msg), ibs, rw.vmCfg, rules)
 			if hooks != nil && hooks.OnTxStart != nil {
