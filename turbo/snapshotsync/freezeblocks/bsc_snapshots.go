@@ -53,9 +53,8 @@ func (br *BlockRetire) retireBscBlocks(ctx context.Context, minBlockNum uint64, 
 	blocksRetired := false
 	totalSegments := 0
 	var blockFrom uint64
-
 	for _, snap := range blockReader.BscSnapshots().Types() {
-		minSnapBlockNum := max(snapshots.DirtyBlocksAvailable(snap.Enum()), minBlockNum, minimumBlob)
+		minSnapBlockNum := max(blockReader.FrozenBscBlobs(), minBlockNum, minimumBlob)
 
 		if maxBlockNum <= minSnapBlockNum || maxBlockNum-minSnapBlockNum < snaptype.Erigon2OldMergeLimit {
 			continue
