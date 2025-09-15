@@ -43,11 +43,6 @@ func (br *BlockRetire) retireBscBlocks(ctx context.Context, minBlockNum uint64, 
 	snapshots := br.bscSnapshots()
 	notifier, logger, blockReader, tmpDir, db, workers := br.notifier, br.logger, br.blockReader, br.tmpDir, br.db, br.workers.Load()
 
-	// Ensure BSC snapshots are initialized for retire operation
-	if err := snapshots.OpenFolder(); err != nil {
-		logger.Warn("[bsc snapshots] Failed to open BSC snapshots folder, continuing with empty snapshots", "err", err)
-	}
-
 	var minimumBlob uint64
 	if br.chainConfig.ChainName == networkname.BSC {
 		minimumBlob = bscMinSegFrom
