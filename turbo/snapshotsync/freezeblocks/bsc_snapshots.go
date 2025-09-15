@@ -24,8 +24,9 @@ import (
 )
 
 const (
-	bscMinSegFrom    = 39_700_000
-	chapelMinSegFrom = 39_500_000
+	bscMinSegFrom       = 39_700_000
+	chapelMinSegFrom    = 39_500_000
+	GenerateBlockNumber = 61_000_000
 )
 
 func (br *BlockRetire) dbHasEnoughDataForBscRetire(ctx context.Context) (bool, error) {
@@ -72,6 +73,15 @@ func (br *BlockRetire) retireBscBlocks(ctx context.Context, minBlockNum uint64, 
 				break
 			}
 			to := chooseSegmentEnd(i, blockTo, snap.Enum(), br.chainConfig)
+
+			// 对于从 GenerateBlockNumber 开始的区块，进行额外的 blob 检查
+			if i >= GenerateBlockNumber {
+				logger.Log(lvl, "[bsc snapshots] Checking blobs for segment", "from", i, "to", to)
+				if !checkBlobs(ctx, i, to, db, br.bs, blockReader, logger) {
+					logger.Warn("[bsc snapshots] Missing blobs detected in segment, regenerating", "from", i, "to", to)
+				}
+			}
+
 			logger.Log(lvl, "[bsc snapshots] Dumping blobs sidecars", "from", i, "to", to)
 			blocksRetired = true
 			if err := DumpBlobs(ctx, i, to, br.chainConfig, tmpDir, snapshots.Dir(), db, int(workers), lvl, blockReader, br.bs, logger); err != nil {
@@ -315,4 +325,58 @@ func (s *BscRoSnapshots) ReadBlobSidecars(blockNum uint64) ([]*types.BlobSidecar
 	}
 
 	return sidecars, nil
+}
+
+func checkBlobs(ctx context.Context, blockFrom, blockTo uint64, chainDB kv.RoDB, blobStore services.BlobStorage, blockReader services.FullBlockReader, logger log.Logger) bool {
+	tx, err := chainDB.BeginRo(ctx)
+	if err != nil {
+		return false
+	}
+	defer tx.Rollback()
+
+	noErr := true
+	totalProcessed := uint64(0)
+	successCount := uint64(0)
+
+	logger.Info("Starting blob check", "blockFrom", blockFrom, "blockTo", blockTo)
+
+	// 遍历从 blockFrom 到 blockTo 的所有区块
+	for num := blockFrom; num < blockTo; num++ {
+		select {
+		case <-ctx.Done():
+			logger.Info("Context cancelled, stopping blob check", "processed", totalProcessed, "current", num)
+			return false
+		default:
+		}
+
+		blobs := GetBlobSidecars(num)
+		hash, ok, err := blockReader.CanonicalHash(ctx, tx, num)
+		if err != nil || !ok {
+			logger.Error("GetBlobSidecars failed", "num", num, "err", err)
+			noErr = false
+			totalProcessed++
+			continue
+		}
+
+		if err = blobStore.WriteBlobSidecars(ctx, hash, blobs); err != nil {
+			logger.Error("WriteBlobSidecars failed", "num", num, "err", err)
+			noErr = false
+		} else {
+			successCount++
+			logger.Debug("WriteBlobSidecars success", "num", num, "hash", hash, "blobs", len(blobs))
+		}
+
+		totalProcessed++
+
+		// 每处理1000个区块输出一次进度
+		if totalProcessed%1000 == 0 {
+			logger.Info("Blob check progress", "processed", totalProcessed, "success", successCount, "current", num, "remaining", blockTo-num)
+		}
+
+		// 添加短暂延迟以避免过度占用资源
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	logger.Info("Blob check completed", "blockFrom", blockFrom, "blockTo", blockTo, "totalProcessed", totalProcessed, "successCount", successCount, "hasErrors", !noErr)
+	return noErr
 }
