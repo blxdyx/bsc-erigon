@@ -35,6 +35,7 @@ func (se *serialExecutor) status(ctx context.Context, commitThreshold uint64) er
 }
 
 func (se *serialExecutor) execute(ctx context.Context, tasks []*state.TxTask, gp *core.GasPool) (cont bool, err error) {
+	var gasUsed626 uint64
 	for _, txTask := range tasks {
 		if txTask.Error != nil {
 			return false, nil
@@ -53,6 +54,16 @@ func (se *serialExecutor) execute(ctx context.Context, tasks []*state.TxTask, gp
 
 			se.txCount++
 			se.gasUsed += txTask.GasUsed
+			if txTask.BlockNum == 62673982 && txTask.Tx != nil {
+				gasUsed626 += txTask.GasUsed
+				se.logger.Info(fmt.Sprintf("[%s] Gas used per tx", se.execStage.LogPrefix()),
+					"block", txTask.BlockNum,
+					"txIndex", txTask.TxIndex,
+					"txHash", txTask.Tx.Hash().String(),
+					"gasUsed", txTask.GasUsed,
+					"cumGasUsedInBlock", gasUsed626,
+				)
+			}
 			mxExecGas.Add(float64(txTask.GasUsed))
 			mxExecTransactions.Add(1)
 
