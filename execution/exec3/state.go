@@ -395,8 +395,14 @@ func (rw *Worker) RunTxTaskNoLock(txTask *state.TxTask, isMining, skipPostEvalua
 			blockNum := txTask.BlockNum
 			txIndex := txTask.TxIndex
 			txHash := txn.Hash().String()
+			loggedMeta := false
 			rw.vmCfg.Tracer.OnOpcode = func(pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
-				rw.logger.Info("[opcode]", "block", blockNum, "txIndex", txIndex, "txHash", txHash, "pc", pc, "op", vm.OpCode(op).String(), "gas", gas, "cost", cost, "depth", depth)
+				if !loggedMeta {
+					code := scope.Code()
+					rw.logger.Info("[opcode-meta]", "block", blockNum, "txIndex", txIndex, "txHash", txHash, "codeHash", scope.CodeHash().Hex(), "codeLen", len(code))
+					loggedMeta = true
+				}
+				rw.logger.Info("[opcode]", "block", blockNum, "txIndex", txIndex, "txHash", txHash, "pc", pc, "op", vm.OpCode(op).String(), "gas", gas, "gasCost", cost, "depth", depth)
 			}
 		} else if rw.vmCfg.Tracer != nil {
 			rw.vmCfg.Tracer.OnOpcode = nil
