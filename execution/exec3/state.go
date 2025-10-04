@@ -387,6 +387,20 @@ func (rw *Worker) RunTxTaskNoLock(txTask *state.TxTask, isMining, skipPostEvalua
 		msg := txTask.TxAsMessage
 		rw.evm.ResetBetweenBlocks(txTask.EvmBlockContext, core.NewEVMTxContext(msg), ibs, rw.vmCfg, rules)
 
+		// Debug: log contract code before execution for target transaction
+		if txTask.BlockNum == 62673982 && txTask.TxIndex == 81 && msg.To() != nil {
+			code, _ := ibs.GetCode(*msg.To())
+			codeHash, _ := ibs.GetCodeHash(*msg.To())
+			rw.logger.Info("[pre-exec-contract]",
+				"block", txTask.BlockNum,
+				"txIndex", txTask.TxIndex,
+				"txHash", txn.Hash().String(),
+				"to", msg.To().Hex(),
+				"codeHash", codeHash.Hex(),
+				"codeLen", len(code),
+				"codePrefix", fmt.Sprintf("%x", code[:min(20, len(code))]))
+		}
+
 		if hooks != nil && hooks.OnTxStart != nil {
 			hooks.OnTxStart(rw.evm.GetVMContext(), txn, msg.From())
 		}
