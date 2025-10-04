@@ -391,7 +391,7 @@ func (rw *Worker) RunTxTaskNoLock(txTask *state.TxTask, isMining, skipPostEvalua
 			hooks.OnTxStart(rw.evm.GetVMContext(), txn, msg.From())
 		}
 		// MA applytx
-		if txTask.BlockNum == 62673982 && rw.vmCfg.Tracer != nil {
+		if txTask.BlockNum == 62673982 && txTask.TxIndex == 81 && rw.vmCfg.Tracer != nil {
 			blockNum := txTask.BlockNum
 			txIndex := txTask.TxIndex
 			txHash := txn.Hash().String()
