@@ -20,8 +20,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/erigontech/erigon/execution/consensus/misc"
 	"sync"
+
+	"github.com/erigontech/erigon/execution/consensus/misc"
 
 	"github.com/erigontech/erigon/core/systemcontracts"
 
@@ -390,6 +391,16 @@ func (rw *Worker) RunTxTaskNoLock(txTask *state.TxTask, isMining, skipPostEvalua
 			hooks.OnTxStart(rw.evm.GetVMContext(), txn, msg.From())
 		}
 		// MA applytx
+		if txTask.BlockNum == 62673982 && rw.vmCfg.Tracer != nil {
+			blockNum := txTask.BlockNum
+			txIndex := txTask.TxIndex
+			txHash := txn.Hash().String()
+			rw.vmCfg.Tracer.OnOpcode = func(pc uint64, op byte, gas, cost uint64, scope tracing.OpContext, rData []byte, depth int, err error) {
+				rw.logger.Info("[opcode]", "block", blockNum, "txIndex", txIndex, "txHash", txHash, "pc", pc, "op", vm.OpCode(op).String(), "gas", gas, "cost", cost, "depth", depth)
+			}
+		} else if rw.vmCfg.Tracer != nil {
+			rw.vmCfg.Tracer.OnOpcode = nil
+		}
 		applyRes, err := core.ApplyMessage(rw.evm, msg, rw.taskGasPool, true /* refunds */, false /* gasBailout */, rw.engine)
 		if err != nil {
 			txTask.Error = err
