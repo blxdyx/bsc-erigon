@@ -223,7 +223,7 @@ func timestampToTime(unixTime *big.Int) *time.Time {
 func (c *Config) String() string {
 	engine := c.getEngine()
 
-	if c.Consensus == ParliaConsensus {
+	if c.Parlia != nil {
 		return fmt.Sprintf("{ChainID: %v, Terminal Total Difficulty: %v, ShanghaiTime: %v, KeplerTime %v, FeynmanTime %v, FeynmanFixTime %v, CancunTime %v, HaberTime %v, HaberFixTime %v, c.BohrTime %v, c.PascalTime %v, c.PragueTime %v, c.LorentzTime %v, c.MaxwellTime %v, c.FermiTime %v, Engine: %v}",
 			c.ChainID,
 			c.TerminalTotalDifficulty,
