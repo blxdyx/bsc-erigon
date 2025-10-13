@@ -237,7 +237,7 @@ var (
 
 	Rialto = Spec{
 		Name:        networkname.Rialto,
-		GenesisHash: common.HexToHash("0x769b541a5e36539a33e2d7c14e6b5c44e6ecd1e0ef13f257bf054710e6b62df4"),
+		GenesisHash: common.HexToHash("0xcb0da00411b7fabe35accab49297011f39467cb2e3023403cc6a8b72f43cad44"),
 		Config:      ReadChainConfig(chainspecs, "chainspecs/rialto.json"),
 		Bootnodes:   rialtoBootnodes,
 		Genesis:     RialtoGenesisBlock(),
