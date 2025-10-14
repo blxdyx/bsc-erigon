@@ -22,11 +22,12 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"github.com/erigontech/erigon/execution/consensus/parlia"
 	"math/rand"
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/erigontech/erigon/execution/consensus/parlia"
 
 	"github.com/c2h5oh/datasize"
 	"golang.org/x/sync/semaphore"

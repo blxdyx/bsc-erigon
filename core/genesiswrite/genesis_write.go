@@ -439,7 +439,7 @@ func GenesisWithoutStateToBlock(g *types.Genesis) (head *types.Header, withdrawa
 	}
 
 	withdrawals = nil
-	if g.Config != nil && g.Config.IsShanghai(g.Timestamp) {
+	if g.Config != nil && g.Config.IsShanghai(g.Timestamp) && g.Config.IsLondon(g.Number) {
 		withdrawals = []*types.Withdrawal{}
 	}
 
