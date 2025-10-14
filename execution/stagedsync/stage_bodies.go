@@ -19,6 +19,7 @@ package stagedsync
 import (
 	"context"
 	"fmt"
+	"github.com/erigontech/erigon/core"
 	"runtime"
 	"time"
 
@@ -239,12 +240,12 @@ func BodiesForward(s *StageState, u Unwinder, ctx context.Context, tx kv.RwTx, c
 
 				metrics.UpdateBlockConsumerBodyDownloadDelay(header.MilliTimestamp(), header.Number.Uint64(), logger)
 
-				//if cfg.chanConfig.Parlia != nil && cfg.chanConfig.IsCancun(header.Time) {
-				//	if err = core.IsDataAvailable(cr, header, rawBody, cfg.bd.LatestBlockTime); err != nil {
-				//		logger.Debug("blob data temporarily unavailable, will retry", "number", blockHeight, "hash", header.Hash().String(), "err", err)
-				//		return false, nil
-				//	}
-				//}
+				if cfg.chanConfig.Parlia != nil && cfg.chanConfig.IsCancun(header.Time) {
+					if err = core.IsDataAvailable(cr, header, rawBody, cfg.bd.LatestBlockTime); err != nil {
+						logger.Debug("blob data temporarily unavailable, will retry", "number", blockHeight, "hash", header.Hash().String(), "err", err)
+						return false, nil
+					}
+				}
 
 				// Check existence before write - because WriteRawBody isn't idempotent (it allocates new sequence range for transactions on every call)
 				ok, err := rawdb.WriteRawBodyIfNotExists(tx, header.Hash(), blockHeight, rawBody)
